@@ -1,0 +1,170 @@
+Q1
+
+SELECT ?journal ?property ?value
+WHERE {
+  ?journal <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://localhost/vocabulary/bench/Journal> .
+  ?journal <http://purl.org/dc/elements/1.1/title> "Journal 1 (1940)"^^<http://www.w3.org/2001/XMLSchema#string> .
+  ?journal <http://purl.org/dc/terms/issued> ?yr .
+  ?journal <http://swrc.ontoware.org/ontology#number> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+  ?journal <http://swrc.ontoware.org/ontology#volume> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .	
+  ?journal ?property ?value .
+}
+
+
+Q2
+
+SELECT ?inproc ?property ?value
+WHERE {
+  ?inproc <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://localhost/vocabulary/bench/Inproceedings> .
+  ?inproc <http://purl.org/dc/elements/1.1/creator> ?author .
+  ?inproc <http://localhost/vocabulary/bench/booktitle> ?booktitle .
+  ?inproc <http://purl.org/dc/elements/1.1/title> ?title .
+  ?inproc <http://purl.org/dc/terms/partOf> ?proc .
+  ?inproc <http://www.w3.org/2000/01/rdf-schema#seeAlso> ?ee .
+  ?inproc <http://swrc.ontoware.org/ontology#pages> ?page .
+  ?inproc <http://xmlns.com/foaf/0.1/homepage> ?url .
+  ?inproc <http://purl.org/dc/terms/issued> ?yr .
+  ?inproc ?property ?value .
+ }
+
+
+Q3a
+
+SELECT ?article ?property ?value
+WHERE {
+  ?article <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://localhost/vocabulary/bench/Article> .
+  ?article <http://swrc.ontoware.org/ontology#pages> ?value .
+  ?article ?property ?value .
+}
+
+
+Q3b
+
+SELECT ?article ?property ?value
+WHERE {
+  ?article <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://localhost/vocabulary/bench/Article> .
+  ?article <http://swrc.ontoware.org/ontology#month> ?value .
+  ?article ?property ?value .
+}
+
+
+Q3c
+
+SELECT ?article ?property ?value
+WHERE {
+  ?article <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://localhost/vocabulary/bench/Article> .
+  ?article <http://swrc.ontoware.org/ontology#isbn> ?value .
+  ?article ?property ?value .
+}
+
+
+Q4
+
+// mention that the goal is not to support all features of SPARQL but to show effective processing of triple patterns. So for this query,
+// either rename bench:Article for the two patterns (since jgrapht considers them as one vertex) or simply ignore the other star-pattern. 
+
+SELECT ?name1 ?name2 
+WHERE {
+  ?article1 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://localhost/vocabulary/bench/Article> .
+  ?article2 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://localhost/vocabulary/bench/Article> .
+  ?article1 <http://purl.org/dc/elements/1.1/creator> ?author1 .
+  ?author1 <http://xmlns.com/foaf/0.1/name> ?name1 .
+  ?article2 <http://purl.org/dc/elements/1.1/creator> ?author2 .
+  ?author2 <http://xmlns.com/foaf/0.1/name> ?name2 .
+  ?article1 <http://swrc.ontoware.org/ontology#journal> ?journal .
+  ?article2 <http://swrc.ontoware.org/ontology#journal> ?journal
+}
+
+Q5a
+
+SELECT ?person ?property ?value
+WHERE {
+  ?article <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://localhost/vocabulary/bench/Article> .
+  ?article <http://purl.org/dc/elements/1.1/creator> ?person .
+  ?inproc <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://localhost/vocabulary/bench/Inproceedings> .
+  ?inproc <http://purl.org/dc/elements/1.1/creator> ?person2 .
+  ?person <http://xmlns.com/foaf/0.1/name> ?name .
+  ?person2 <http://xmlns.com/foaf/0.1/name> ?name .
+  ?person ?property ?value .	
+}
+
+Q5b
+
+SELECT ?person ?property ?value
+WHERE {
+  ?article <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://localhost/vocabulary/bench/Article> .
+  ?article <http://purl.org/dc/elements/1.1/creator> ?person .
+  ?inproc <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://localhost/vocabulary/bench/Inproceedings> .
+  ?inproc <http://purl.org/dc/elements/1.1/creator> ?person .
+  ?person <http://xmlns.com/foaf/0.1/name> ?name .
+  ?person ?property ?value .
+}
+
+Q6
+
+SELECT ?yr ?name ?document
+WHERE {
+  ?class <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://xmlns.com/foaf/0.1/Document> .
+  ?document <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?class .
+  ?document <http://purl.org/dc/terms/issued> ?yr .
+  ?document <http://purl.org/dc/elements/1.1/creator> ?author .
+  ?author <http://xmlns.com/foaf/0.1/name> ?name .
+  ?class2 <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://xmlns.com/foaf/0.1/Document> .
+  ?document2 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?class2 .
+  ?document2 <http://purl.org/dc/terms/issued> ?yr2 .
+  ?document2 <http://purl.org/dc/elements/1.1/creator> ?author2 .
+}
+
+SELECT ?subject ?property ?object WHERE { ?class <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://xmlns.com/foaf/0.1/Document> . ?document <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?class . ?document <http://purl.org/dc/terms/issued> ?yr . ?document <http://purl.org/dc/elements/1.1/creator> ?author1 . ?author1 <http://xmlns.com/foaf/0.1/name> ?name1 . ?class2 <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://xmlns.com/foaf/0.1/Document> . ?document2 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?class2 . ?document2 <http://purl.org/dc/terms/issued> ?yr2 . ?document2 <http://purl.org/dc/elements/1.1/creator> ?author2 . ?author2 <http://xmlns.com/foaf/0.1/name> ?name2 . ?subject ?property ?object . }
+
+SELECT ?subject ?property ?object WHERE { ?class <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://xmlns.com/foaf/0.1/Document> . ?document <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?class . ?document <http://purl.org/dc/terms/issued> ?yr . ?document <http://purl.org/dc/elements/1.1/creator> ?author1 . ?author1 <http://xmlns.com/foaf/0.1/name> ?name1 . ?class2 <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://xmlns.com/foaf/0.1/Document> . ?document2 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?class2 . ?document2 <http://purl.org/dc/terms/issued> ?yr2 . ?document2 <http://purl.org/dc/elements/1.1/creator> ?author1 . }
+
+Q7
+
+SELECT ?title
+WHERE {
+  ?class <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://xmlns.com/foaf/0.1/Document> .
+  ?doc <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?class .
+  ?doc <http://purl.org/dc/elements/1.1/title> ?title .
+  ?bag2 ?member2 ?doc .
+  ?doc2 <http://purl.org/dc/terms/references> ?bag2
+  ?class3 <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://xmlns.com/foaf/0.1/Document> .
+  ?doc3 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?class3 .
+  ?doc3 <http://purl.org/dc/terms/references> ?bag3 .
+  ?bag3 ?member3 ?doc3 .
+  ?class4 <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://xmlns.com/foaf/0.1/Document> .
+  ?doc4 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?class4 .
+  ?doc4 <http://purl.org/dc/terms/references> ?bag4 .
+  ?bag4 ?member4 ?doc4 .
+}
+
+Q8
+
+SELECT ?name
+WHERE {
+  ?erdoes rdf:type foaf:Person .
+  ?erdoes foaf:name "Paul Erdoes"^^xsd:string .
+}
+
+Q9
+
+SELECT ?person ?predicate ?object
+WHERE {
+    ?subject ?predicate ?person .
+    ?person <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://xmlns.com/foaf/0.1/Person> .
+    ?person ?predicate ?object .
+}
+
+Q10
+
+SELECT ?subject ?predicate
+WHERE {
+  ?subject ?predicate person:Paul_Erdoes
+}
+
+Q11
+
+SELECT ?ee
+WHERE {
+  ?publication rdfs:seeAlso ?ee
+}
