@@ -1,0 +1,22 @@
+# OS generated files #
+######################
+.DS_Store
+.DS_Store?
+.Trashes
+Thumbs.db
+
+
+# binary files #
+################
+bin/
+
+
+# Eclipse generated files #
+###########################
+.classpath
+.project
+
+
+# svn files #
+#############
+.svn/

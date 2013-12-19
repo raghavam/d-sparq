@@ -1,0 +1,30 @@
+<project name="rdf3x" default="jar" basedir=".">
+	
+	<property name="src" value="java"/>
+	<property name="build" value="bin"/>
+	<property name="dist" value="dist"/>
+	
+	<target name="init" depends="clean">
+			<mkdir dir="${build}" />
+			<mkdir dir="${dist}" />
+	</target>
+	
+	<target name="clean">
+			<delete dir="${build}" quiet="true">
+			</delete>
+			<delete dir="${dist}" quiet="true">
+			</delete>
+	</target>
+
+	<target name="compile" depends="init">
+			<javac srcdir="${src}" destdir="${build}" debug="on">
+			</javac>
+	</target>	
+		
+		
+	<target name="jar" depends="compile">
+			<jar destfile="${dist}/${ant.project.name}.jar" basedir="${build}">
+			</jar>
+	</target>
+	
+</project>	
