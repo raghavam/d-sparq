@@ -25,13 +25,18 @@ import dsparq.query.analysis.StarPattern;
 
 public class PatternHandler {
 
-	protected Map<String, QueueHandler2> dependentQueueMap;
 	protected Mongo localMongo;
 	protected DBCollection starSchemaCollection;
 	protected DB localDB;
 	protected ExecutorService threadPool;
 	protected Phaser synchPhaser;
+	/*Key: Predicates. They are definitely constants (in sp2 modified queries).
+	 *Value: Combination of subject & object. Object is useful for pipelines.
+	 *		 Subject is used for further verification.
+	 */
 	protected HashMap<String, SubObj> predSubObjMap; 
+	//Object is the key. This is useful for pipeline patterns.
+	protected Map<String, QueueHandler2> dependentQueueMap;
 	
 	public PatternHandler() {
 		dependentQueueMap = new HashMap<String, QueueHandler2>();
@@ -148,11 +153,7 @@ public class PatternHandler {
 			else if(pattern instanceof PipelinePattern) {	
 				PipelinePattern ppattern = (PipelinePattern) pattern;
 				NumericalTriplePattern ntp = ppattern.getTriple();
-				SubObj subObj;
-				if(ntp.getSubject().charAt(0) != '?')
-					subObj = new SubObj(ntp.getSubject(), ntp.getObject());
-				else
-					subObj = new SubObj(ntp.getObject());
+				SubObj subObj = new SubObj(ntp.getSubject(), ntp.getObject());
 				predSubObjMap.put(ntp.getPredicate().getEdgeLabel(), 
 						subObj);
 				DBObject elemMatch = handleNumericalTriplePattern(
@@ -162,10 +163,12 @@ public class PatternHandler {
 				List<RelationPattern> relPatterns = 
 						ppattern.getRelationPatterns();
 				for(RelationPattern relPattern : relPatterns) {
-					dependentQueueMap.put(ntp.getObject(), 
+						//same for ConnectingRelation.OBJ_SUB and 
+						//ConnectingRelation.OBJ_OBJ 
+						dependentQueueMap.put(ntp.getObject(), 
 							new QueueHandler2(
 									relPattern.getConnectingPattern(), 
-									threadPool, synchPhaser));
+									threadPool));
 				}
 			}
 			else {
@@ -209,19 +212,17 @@ public class PatternHandler {
 			return combinedDoc;
 		}
 		else {
-			SubObj subObj;
-			if(triple.getSubject().charAt(0) != '?')
-				subObj = new SubObj(triple.getSubject(), triple.getObject());
-			else
-				subObj = new SubObj(triple.getObject());
-			predSubObjMap.put(triple.getObject(), subObj);
+			SubObj subObj = new SubObj(triple.getSubject(), triple.getObject());
+			predSubObjMap.put(triple.getPredicate().getEdgeLabel(), subObj);
 			DBObject subjectDoc = createSubjectDoc(triple);
 			DBObject predObjDoc = handleNumericalTriplePattern(triple);
 			DBObject combinedDoc = createSubPredObjDoc(subjectDoc, predObjDoc);
 			for(RelationPattern rpattern : relationPatterns) {
 				//create a queue for each rpattern
 				QueueHandler2 queueHandler = new QueueHandler2(
-						rpattern.getConnectingPattern(), threadPool, synchPhaser);
+						rpattern.getConnectingPattern(), threadPool);
+				//same for ConnectingRelation.OBJ_SUB and 
+				//ConnectingRelation.OBJ_OBJ
 				dependentQueueMap.put(triple.getObject(), queueHandler);
 			}
 			return combinedDoc;
