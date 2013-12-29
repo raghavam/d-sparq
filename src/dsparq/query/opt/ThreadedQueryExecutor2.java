@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -88,16 +89,19 @@ public class ThreadedQueryExecutor2 extends PatternHandler {
 	private void executePattern(QueryPattern queryPattern) throws Exception {	
 		DBObject queryDoc;
 		if(queryPattern instanceof NumericalTriplePattern) {
-			queryDoc = handleNumericalTriplePattern(
-					(NumericalTriplePattern) queryPattern);
+			/*
+			 * If a query has only one pattern which is a NumericalTriplePattern
+			 * then it is considered as a PipelinePattern by BiConFinder. So a
+			 * check for NumericalTriplePattern should never happen.
+			 */
+			throw new Exception("Cannot be a NumericalTriplePattern. " + 
+						queryPattern.toString());
 		}
 		else if(queryPattern instanceof StarPattern) {
 			queryDoc = handleStarPattern((StarPattern) queryPattern);
 		}
 		else if(queryPattern instanceof PipelinePattern) {
-			PipelinePattern pipelinePattern = 
-					(PipelinePattern) queryPattern;
-			queryDoc = handlePipelinePattern(pipelinePattern);
+			queryDoc = handlePipelinePattern((PipelinePattern) queryPattern);
 		}
 		else
 			throw new Exception("Unexpected type " + 
@@ -112,16 +116,38 @@ public class ThreadedQueryExecutor2 extends PatternHandler {
 //				(new FileWriter(new File(outputFileName))));
 
 		long resultCount = 0;
-		int i = 0;
+//		int i = 0;
 		while(cursor.hasNext()) {
 			DBObject result = cursor.next();
 			//store result somewhere; print/count for now
 //			writer.print("Sub: " + result.get(Constants.FIELD_TRIPLE_SUBJECT));
 //			System.out.print( 
 //					result.get(Constants.FIELD_TRIPLE_SUBJECT));
+			String sub = (String) result.get(Constants.FIELD_TRIPLE_SUBJECT);
 			BasicDBList predObjList = 
 					(BasicDBList) result.get(Constants.FIELD_TRIPLE_PRED_OBJ);
-			for(i=0; i<predObjList.size(); i++) {
+			for(Object predObj : predObjList) {
+				BasicDBObject item = (BasicDBObject) predObj;
+				String pred = (String) item.get(Constants.FIELD_TRIPLE_PREDICATE);
+				String obj = (String) item.get(Constants.FIELD_TRIPLE_OBJECT);
+				SubObj subObj = predSubObjMap.get(pred);
+				if(subObj != null) {
+					//check if subject is a constant, compare it and retrieve
+					//the queue associated with the object.
+					if(subObj.subject != null) {
+						QueueHandler2 queueHandler = 
+								dependentQueueMap.get(subObj.object);
+						if(subObj.subject.charAt(0) != '?') {
+							//if sub is a constant, it should match
+							if(subObj.subject.equals(sub))
+								queueHandler.addToQueue(Long.parseLong(obj));
+						}
+						else {
+							//no need to check whether subjects are the same
+							queueHandler.addToQueue(Long.parseLong(obj));
+						}
+					}
+				}
 //				writer.print("  Pred: " + item.get(Constants.FIELD_TRIPLE_PREDICATE));
 //				writer.println("  Obj: " + item.get(Constants.FIELD_TRIPLE_OBJECT));
 //				System.out.print("  " + 
@@ -131,6 +157,10 @@ public class ThreadedQueryExecutor2 extends PatternHandler {
 				resultCount++;
 			}		
 		}
+		//Handle any remaining items in the queues
+		Collection<QueueHandler2> queueHandlers = dependentQueueMap.values();
+		for(QueueHandler2 queueHandler : queueHandlers)
+			queueHandler.addToQueue(null);
 		System.out.println("Total results: " + resultCount);
 		cursor.close();
 //		writer.close();

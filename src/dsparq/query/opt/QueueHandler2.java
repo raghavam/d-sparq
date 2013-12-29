@@ -5,8 +5,6 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import jsr166y.Phaser;
-
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 
@@ -15,26 +13,25 @@ import dsparq.query.analysis.NumericalTriplePattern;
 import dsparq.query.analysis.PipelinePattern;
 import dsparq.query.analysis.QueryPattern;
 import dsparq.query.analysis.StarPattern;
-import dsparq.util.Util;
 
 public class QueueHandler2 {
 
 	private LinkedBlockingQueue<Long> joinIDs;
 	private QueryPattern connectingPattern;
 	private ExecutorService threadPool;
-	private Phaser synchPhaser;
 	
 	public QueueHandler2(QueryPattern connectingPattern, 
-			ExecutorService threadExecutorService, Phaser synchPhaser) {
+			ExecutorService threadExecutorService) {
 		this.connectingPattern = connectingPattern;
 		joinIDs = new LinkedBlockingQueue<Long>(Constants.QUEUE_CAPACITY);
 		this.threadPool = threadExecutorService;
-		this.synchPhaser = synchPhaser;
 	}
 	
 	public void addToQueue(Long joinID) {
 		if(joinID == null) {
 			//when done adding all elements, null is sent to this method.
+			if(joinIDs.isEmpty())
+				return;
 			spawnThread();
 		}
 		boolean isElementAdded = joinIDs.offer(joinID);
@@ -78,7 +75,7 @@ class JoinProcessor2 extends PatternHandler implements Runnable {
 				cursor = starSchemaCollection.find();
 			else
 				cursor = starSchemaCollection.find(combinedDoc);
-			System.out.println("No of docs: " + cursor.count());
+			System.out.println("In QueueHandler2, #docs: " + cursor.count());
 		}
 		else if(queryPattern instanceof StarPattern) {
 			StarPattern starPattern = (StarPattern) queryPattern;
@@ -88,7 +85,8 @@ class JoinProcessor2 extends PatternHandler implements Runnable {
 				cursor = starSchemaCollection.find();
 			else
 				cursor = starSchemaCollection.find(starDoc);
-			System.out.println("No of docs: " + cursor.count());
+			System.out.println("In QueueHandler2, StarPattern, " +
+					"#docs: " + cursor.count());
 			//TODO: Check if more queues need to be created
 		}
 		else if(queryPattern instanceof PipelinePattern) {
@@ -99,7 +97,8 @@ class JoinProcessor2 extends PatternHandler implements Runnable {
 				cursor = starSchemaCollection.find();
 			else
 				cursor = starSchemaCollection.find(starDoc);
-			System.out.println("No of docs: " + cursor.count());
+			System.out.println("In QueueHandler2, PipelinePattern, " +
+					"#docs: " + cursor.count());
 			//TODO: Check if more queues need to be created
 		}
 		else {
