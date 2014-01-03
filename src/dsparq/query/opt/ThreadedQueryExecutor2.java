@@ -123,13 +123,13 @@ public class ThreadedQueryExecutor2 extends PatternHandler {
 //			writer.print("Sub: " + result.get(Constants.FIELD_TRIPLE_SUBJECT));
 //			System.out.print( 
 //					result.get(Constants.FIELD_TRIPLE_SUBJECT));
-			String sub = (String) result.get(Constants.FIELD_TRIPLE_SUBJECT);
+			Long sub = (Long) result.get(Constants.FIELD_TRIPLE_SUBJECT);
 			BasicDBList predObjList = 
 					(BasicDBList) result.get(Constants.FIELD_TRIPLE_PRED_OBJ);
 			for(Object predObj : predObjList) {
 				BasicDBObject item = (BasicDBObject) predObj;
-				String pred = (String) item.get(Constants.FIELD_TRIPLE_PREDICATE);
-				String obj = (String) item.get(Constants.FIELD_TRIPLE_OBJECT);
+				Long pred = (Long) item.get(Constants.FIELD_TRIPLE_PREDICATE);
+				Long obj = (Long) item.get(Constants.FIELD_TRIPLE_OBJECT);
 				SubObj subObj = predSubObjMap.get(pred);
 				if(subObj != null) {
 					//check if subject is a constant, compare it and retrieve
@@ -139,12 +139,12 @@ public class ThreadedQueryExecutor2 extends PatternHandler {
 								dependentQueueMap.get(subObj.object);
 						if(subObj.subject.charAt(0) != '?') {
 							//if sub is a constant, it should match
-							if(subObj.subject.equals(sub))
-								queueHandler.addToQueue(Long.parseLong(obj));
+							if(Long.parseLong(subObj.subject) == sub.longValue())
+								queueHandler.addToQueue(obj);
 						}
 						else {
 							//no need to check whether subjects are the same
-							queueHandler.addToQueue(Long.parseLong(obj));
+							queueHandler.addToQueue(obj);
 						}
 					}
 				}
