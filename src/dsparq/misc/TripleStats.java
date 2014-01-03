@@ -2,10 +2,19 @@ package dsparq.misc;
 
 import java.io.FileInputStream;
 import java.util.ArrayList;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 import org.semanticweb.yars.nx.Node;
 import org.semanticweb.yars.nx.parser.NxParser;
+
+import com.mongodb.BasicDBList;
+import com.mongodb.DB;
+import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
+import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisShardInfo;
@@ -61,11 +70,38 @@ public class TripleStats {
 		jedis.disconnect();
 	}
 	
-	public static void main(String[] args) throws Exception {
-		if(args.length != 1) {
-			System.out.println("Specify the path to the triples file.");
-			System.exit(-1);
+	public void countTotalTriples() throws Exception {
+		Mongo mongo = null;
+		try {
+			mongo = new MongoClient("nimbus5", 10000);
+			DB db = mongo.getDB(Constants.MONGO_RDF_DB);
+			DBCollection starSchemaCollection = db.getCollection(
+					Constants.MONGO_STAR_SCHEMA);
+			System.out.println("Counting triples...");
+			DBCursor cursor = starSchemaCollection.find();
+			long totalTriples = 0;
+			GregorianCalendar start = new GregorianCalendar();
+			while(cursor.hasNext()) {
+				DBObject result = cursor.next();
+				BasicDBList predObjList = 
+						(BasicDBList) result.get(
+								Constants.FIELD_TRIPLE_PRED_OBJ);
+				totalTriples += predObjList.size();
+			}
+			System.out.println("Total triples: " + totalTriples);
+			double secs = Util.getElapsedTime(start);
+			long totalMins = (long)secs/60;
+			double totalSecs = secs - (totalMins * 60);
+			System.out.println("Secs: " + secs);
+			System.out.println(totalMins + " mins and " + totalSecs + " secs");
 		}
-		new TripleStats().getTypeCount(args[0]);
+		finally {
+			if(mongo != null)
+				mongo.close();
+		}
+	}
+	
+	public static void main(String[] args) throws Exception {
+		new TripleStats().countTotalTriples();
 	}
 }
