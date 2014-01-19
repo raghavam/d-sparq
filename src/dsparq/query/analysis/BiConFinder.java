@@ -106,7 +106,8 @@ public class BiConFinder {
 									((PipelinePattern)pattern).
 										addRelationTriple(
 												ConnectingRelation.OBJ_SUB, 
-												connectingPattern);
+												connectingPattern, 
+												e.getEdgeTarget().getLabel());
 								}
 							}
 							else
@@ -132,7 +133,8 @@ public class BiConFinder {
 									if(connectingPattern != null)
 										ppattern.addRelationTriple(
 												ConnectingRelation.OBJ_SUB, 
-												connectingPattern);
+												connectingPattern, 
+												e.getEdgeTarget().getLabel());
 									((StarPattern)pattern).addQueryPattern(
 											ppattern);
 								}
@@ -179,7 +181,8 @@ public class BiConFinder {
 				if(pattern instanceof PipelinePattern) {
 					if(vertexQueryPattern != null)
 						((PipelinePattern)pattern).addRelationTriple(
-							ConnectingRelation.OBJ_SUB, vertexQueryPattern);
+							ConnectingRelation.OBJ_SUB, vertexQueryPattern, 
+							e.getEdgeSource().getLabel());
 					for(RelationshipEdge edge : incomingEdges) {
 						if(edge.getEdgeSource().equals(e.getEdgeSource()))
 							continue;
@@ -187,21 +190,26 @@ public class BiConFinder {
 											edge.getEdgeSource().getLabel());
 						if(pattern2 != null)
 							((PipelinePattern)pattern).addRelationTriple(
-									ConnectingRelation.OBJ_OBJ, pattern2);
+									ConnectingRelation.OBJ_OBJ, pattern2, 
+									edge.getEdgeSource().getLabel());
 					}
 				}
 				else if(pattern instanceof StarPattern) {
-					if(vertexQueryPattern != null)
+					if(vertexQueryPattern != null) {
 						((StarPattern)pattern).searchAndAdd(vertex.getLabel(), 
-							ConnectingRelation.OBJ_SUB, vertexQueryPattern);
+							ConnectingRelation.OBJ_SUB, vertexQueryPattern, 
+							vertex.getLabel());
+					}
 					for(RelationshipEdge edge : incomingEdges) {
 						if(edge.getEdgeSource().equals(e.getEdgeSource()))
 							continue;
 						QueryPattern pattern2 = vertexPatternMap.get(
 											edge.getEdgeSource().getLabel());
-						if(pattern2 != null)
+						if(pattern2 != null) {
 							((StarPattern)pattern).searchAndAdd(vertex.getLabel(),
-									ConnectingRelation.OBJ_OBJ, pattern2);
+									ConnectingRelation.OBJ_OBJ, pattern2, 
+									vertex.getLabel());
+						}
 					}
 				}
 				else

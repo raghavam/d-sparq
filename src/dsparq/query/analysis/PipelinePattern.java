@@ -31,9 +31,9 @@ public class PipelinePattern extends QueryPattern {
 	}
 	
 	public void addRelationTriple(ConnectingRelation connectingRelation, 
-			QueryPattern connectingPattern) {
+			QueryPattern connectingPattern, String connectingVariable) {
 		RelationPattern relationPattern = new RelationPattern(
-				connectingRelation, connectingPattern);
+				connectingRelation, connectingPattern, connectingVariable);
 		relationPatterns.add(relationPattern);
 	}
 	

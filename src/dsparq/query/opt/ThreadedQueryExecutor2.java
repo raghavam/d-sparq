@@ -15,6 +15,7 @@ import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import org.jgrapht.alg.ConnectivityInspector;
 import org.jgrapht.graph.ClassBasedEdgeFactory;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.SimpleDirectedGraph;
@@ -74,14 +75,41 @@ public class ThreadedQueryExecutor2 extends PatternHandler {
 					queryVisitor.getBasicGraphPatterns();
 			constructGraphs(basicGraphPatterns, 
 					queryVisitor.getQueryVariables());
-//			System.out.println("DirectedGraph: " + directedQueryGraph.toString());
+			//find if there are any independent pieces
+			ConnectivityInspector<RDFVertex, RelationshipEdge> 
+				connectivityInspector = 
+					new ConnectivityInspector<RDFVertex, RelationshipEdge>(
+							directedQueryGraph);
+			List<Set<RDFVertex>> connectedSets = 
+					connectivityInspector.connectedSets();
+			List<QueryPattern> queryPatterns = 
+					new ArrayList<QueryPattern>(connectedSets.size());
 			BiConFinder biconFinder = new BiConFinder();
-			QueryPattern queryPattern = biconFinder.getQueryPatterns(
-						undirectedQueryGraph, directedQueryGraph);
-			System.out.println(queryPattern.toString());
-			executePattern(queryPattern);
+			if(connectedSets.size() == 1) {
+				queryPatterns.add(biconFinder.getQueryPatterns(
+						undirectedQueryGraph, directedQueryGraph));
+			}
+			else {
+				//get the graphs associated with each connected vertex set.
+				for(Set<RDFVertex> disconnectedSet : connectedSets) {
+					System.out.println("ConnectedSet: " + disconnectedSet);
+					//construct a graph using these vertices
+					for(RDFVertex v1 : disconnectedSet)
+						for(RDFVertex v2 : disconnectedSet) {
+							RelationshipEdge e = directedQueryGraph.getEdge(v1, v2);
+							if(e != null)
+							System.out.println("Between " + v1 + " and " + 
+									v2 + ": " + e);
+						}
+				}
+			}
+			System.out.println("Query Patterns: ");
+			for(QueryPattern queryPattern : queryPatterns)
+				System.out.println(queryPattern.toString() + "\n");
+//			executePattern(queryPattern);
 		}
 		finally {
+			System.out.println(">>>>>>>Closing Mongo now...");
 			localMongo.close();
 		}
 	}
@@ -98,7 +126,8 @@ public class ThreadedQueryExecutor2 extends PatternHandler {
 						queryPattern.toString());
 		}
 		else if(queryPattern instanceof StarPattern) {
-			queryDoc = handleStarPattern((StarPattern) queryPattern);
+			queryDoc = handleStarPattern((StarPattern) queryPattern, 
+					null, null, null);
 		}
 		else if(queryPattern instanceof PipelinePattern) {
 			queryDoc = handlePipelinePattern((PipelinePattern) queryPattern);
@@ -106,7 +135,10 @@ public class ThreadedQueryExecutor2 extends PatternHandler {
 		else
 			throw new Exception("Unexpected type " + 
 						queryPattern.toString());
+		System.out.println("DependentQueueMap: " + dependentQueueMap.keySet());
 		DBCursor cursor; 
+		System.out.println("Limiting results to " + LIMIT_RESULTS + 
+				" for testing.....");
 //		System.out.println(queryDoc.toString());
 		cursor = (queryDoc == null) ? starSchemaCollection.find() : 
 			starSchemaCollection.find(queryDoc);
@@ -116,6 +148,7 @@ public class ThreadedQueryExecutor2 extends PatternHandler {
 //				(new FileWriter(new File(outputFileName))));
 
 		long resultCount = 0;
+		long docCount = 0;
 //		int i = 0;
 		while(cursor.hasNext()) {
 			DBObject result = cursor.next();
@@ -123,6 +156,7 @@ public class ThreadedQueryExecutor2 extends PatternHandler {
 //			writer.print("Sub: " + result.get(Constants.FIELD_TRIPLE_SUBJECT));
 //			System.out.print( 
 //					result.get(Constants.FIELD_TRIPLE_SUBJECT));
+			docCount++;
 			Long sub = (Long) result.get(Constants.FIELD_TRIPLE_SUBJECT);
 			BasicDBList predObjList = 
 					(BasicDBList) result.get(Constants.FIELD_TRIPLE_PRED_OBJ);
@@ -131,6 +165,7 @@ public class ThreadedQueryExecutor2 extends PatternHandler {
 				Long pred = (Long) item.get(Constants.FIELD_TRIPLE_PREDICATE);
 				Long obj = (Long) item.get(Constants.FIELD_TRIPLE_OBJECT);
 				SubObj subObj = predSubObjMap.get(pred);
+/*				
 				if(subObj != null) {
 					//check if subject is a constant, compare it and retrieve
 					//the queue associated with the object.
@@ -148,6 +183,7 @@ public class ThreadedQueryExecutor2 extends PatternHandler {
 						}
 					}
 				}
+*/				
 //				writer.print("  Pred: " + item.get(Constants.FIELD_TRIPLE_PREDICATE));
 //				writer.println("  Obj: " + item.get(Constants.FIELD_TRIPLE_OBJECT));
 //				System.out.print("  " + 
@@ -157,11 +193,13 @@ public class ThreadedQueryExecutor2 extends PatternHandler {
 				resultCount++;
 			}		
 		}
+		System.out.println("Checking queues for remaining items...");
 		//Handle any remaining items in the queues
 		Collection<QueueHandler2> queueHandlers = dependentQueueMap.values();
 		for(QueueHandler2 queueHandler : queueHandlers)
 			queueHandler.addToQueue(null);
-		System.out.println("Total results: " + resultCount);
+		System.out.println("#Docs: " + docCount + 
+				"   Total results: " + resultCount);
 		cursor.close();
 //		writer.close();
 		synchPhaser.arriveAndAwaitAdvance();

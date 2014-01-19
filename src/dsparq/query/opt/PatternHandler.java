@@ -17,6 +17,7 @@ import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
 
 import dsparq.misc.Constants;
+import dsparq.query.analysis.ConnectingRelation;
 import dsparq.query.analysis.NumericalTriplePattern;
 import dsparq.query.analysis.PipelinePattern;
 import dsparq.query.analysis.QueryPattern;
@@ -34,13 +35,15 @@ public class PatternHandler {
 	 *Value: Combination of subject & object. Object is useful for pipelines.
 	 *		 Subject is used for further verification.
 	 */
-	protected HashMap<String, SubObj> predSubObjMap; 
+	protected HashMap<Long, SubObj> predSubObjMap; 
 	//Object is the key. This is useful for pipeline patterns.
 	protected Map<String, QueueHandler2> dependentQueueMap;
 	
+	protected final int LIMIT_RESULTS = 100;			//for testing, remove later
+	
 	public PatternHandler() {
 		dependentQueueMap = new HashMap<String, QueueHandler2>();
-		predSubObjMap = new HashMap<String, SubObj>();
+		predSubObjMap = new HashMap<Long, SubObj>();
 		threadPool = Executors.newCachedThreadPool();
 		try {
 			localMongo = new MongoClient("nimbus5", 10000);
@@ -57,18 +60,21 @@ public class PatternHandler {
 	 * Handles only the predicate, object part. Subject has to handled
 	 * separately by the caller since subject is not part of the "predobj" array.
 	 * @param numericalTriplePattern
+	 * @param objJoinID the join value to be used for object. null is used 
+	 * 					in cases where the join should not be considered.
 	 * @return
 	 */
 	public DBObject handleNumericalTriplePattern(
-			NumericalTriplePattern numericalTriplePattern) {
+			NumericalTriplePattern numericalTriplePattern, Long objJoinID) {
 		String predID = numericalTriplePattern.getPredicate().getEdgeLabel();
-		String objID = numericalTriplePattern.getObject();
+		String objID = (objJoinID != null) ? Long.toString(objJoinID) : 
+			numericalTriplePattern.getObject();
 		boolean isPredVar = true;
 		boolean isObjVar = true;
 		DBObject elemMatch = null;
-		if(numericalTriplePattern.getPredicate().getEdgeLabel().charAt(0) != '?')
+		if(predID.charAt(0) != '?')
 			isPredVar = false;
-		if(numericalTriplePattern.getObject().charAt(0) != '?')
+		if(objID.charAt(0) != '?')
 			isObjVar = false;
 		if(!isPredVar && !isObjVar) {
 			//both predicate & object are constants
@@ -90,18 +96,21 @@ public class PatternHandler {
 			//object is constant
 			elemMatch = new BasicDBObject("$elemMatch", 
 					new BasicDBObject(Constants.FIELD_TRIPLE_OBJECT, 
-					Long.parseLong(predID)));
+					Long.parseLong(objID)));
 		}
 		return elemMatch;
 	}
 	
-	public DBObject createSubjectDoc(NumericalTriplePattern ntp) {
-		DBObject subjectDoc = null;
-		if(ntp.getSubject().charAt(0) != '?') {
-			subjectDoc = new BasicDBObject();
+	public DBObject createSubjectDoc(NumericalTriplePattern ntp, Long subJoinID) {
+		DBObject subjectDoc = new BasicDBObject();
+		if(subJoinID != null)
+			subjectDoc.put(Constants.FIELD_TRIPLE_SUBJECT, subJoinID);
+		else if(ntp.getSubject().charAt(0) != '?') {
 			subjectDoc.put(Constants.FIELD_TRIPLE_SUBJECT, 
 					Long.parseLong(ntp.getSubject()));
 		}
+		else
+			subjectDoc = null;
 		return subjectDoc;
 	}
 	
@@ -121,7 +130,9 @@ public class PatternHandler {
 			return null;
 	}
 	
-	public DBObject handleStarPattern(StarPattern starPattern) {
+	public DBObject handleStarPattern(StarPattern starPattern, 
+			ConnectingRelation connectingRelation, String connectingVariable, 
+			Long joinID) {
 		//TODO: put in selectivity. Checking speed without selectivity first.
 //		reorderPatterns(starPattern);
 				
@@ -139,10 +150,24 @@ public class PatternHandler {
 			if(pattern instanceof NumericalTriplePattern) {
 				NumericalTriplePattern ntp = (NumericalTriplePattern) pattern;
 				if(!isSubjectRead) {
-					subjectDoc = createSubjectDoc(ntp);
+					if(connectingRelation == null)
+						subjectDoc = createSubjectDoc(ntp, null);
+					else if(connectingRelation == ConnectingRelation.OBJ_SUB)
+						subjectDoc = createSubjectDoc(ntp, joinID);
 					isSubjectRead = true;
 				}
-				DBObject elemMatch = handleNumericalTriplePattern(ntp);
+				DBObject elemMatch;
+				if(connectingRelation == ConnectingRelation.OBJ_OBJ) {
+					//check if the object of this pattern matches with
+					//the connecting variable
+					if(ntp.getObject().equals(connectingVariable)) {
+						elemMatch = handleNumericalTriplePattern(ntp, joinID);
+					}
+					else
+						elemMatch = handleNumericalTriplePattern(ntp, null);
+				}
+				else
+					elemMatch = handleNumericalTriplePattern(ntp, null);
 				if(elemMatch != null)
 					conditions.add(elemMatch);
 			}
@@ -154,21 +179,22 @@ public class PatternHandler {
 				PipelinePattern ppattern = (PipelinePattern) pattern;
 				NumericalTriplePattern ntp = ppattern.getTriple();
 				SubObj subObj = new SubObj(ntp.getSubject(), ntp.getObject());
-				predSubObjMap.put(ntp.getPredicate().getEdgeLabel(), 
-						subObj);
+				predSubObjMap.put(Long.valueOf(
+						ntp.getPredicate().getEdgeLabel()), subObj);
 				DBObject elemMatch = handleNumericalTriplePattern(
-						ntp);
+						ntp, null);
 				if(elemMatch != null)
 					conditions.add(elemMatch);
 				List<RelationPattern> relPatterns = 
 						ppattern.getRelationPatterns();
-				for(RelationPattern relPattern : relPatterns) {
-						//same for ConnectingRelation.OBJ_SUB and 
-						//ConnectingRelation.OBJ_OBJ 
-						dependentQueueMap.put(ntp.getObject(), 
-							new QueueHandler2(
-									relPattern.getConnectingPattern(), 
-									threadPool));
+				if(!relPatterns.isEmpty()) {
+					if(relPatterns.size() > 1) {
+						try {
+							throw new Exception("Expecting only 1 pattern");
+						}catch(Exception e) { e.printStackTrace(); }
+					}
+					dependentQueueMap.put(ntp.getObject(), 
+							new QueueHandler2(relPatterns.get(0), threadPool));
 				}
 			}
 			else {
@@ -202,30 +228,66 @@ public class PatternHandler {
 	
 	public DBObject handlePipelinePattern(PipelinePattern pipelinePattern) {
 		NumericalTriplePattern triple = pipelinePattern.getTriple();
+		DBObject subjectDoc = createSubjectDoc(triple, null);
+		DBObject predObjDoc = handleNumericalTriplePattern(triple, null);
+		DBObject combinedDoc = createSubPredObjDoc(subjectDoc, predObjDoc);
 		List<RelationPattern> relationPatterns = 
 				pipelinePattern.getRelationPatterns();
 		if(relationPatterns.isEmpty()) {
 			//treat it as a NumericalTriplePattern
-			DBObject subjectDoc = createSubjectDoc(triple);
-			DBObject predObjDoc = handleNumericalTriplePattern(triple);
-			DBObject combinedDoc = createSubPredObjDoc(subjectDoc, predObjDoc);
 			return combinedDoc;
 		}
 		else {
-			SubObj subObj = new SubObj(triple.getSubject(), triple.getObject());
-			predSubObjMap.put(triple.getPredicate().getEdgeLabel(), subObj);
-			DBObject subjectDoc = createSubjectDoc(triple);
-			DBObject predObjDoc = handleNumericalTriplePattern(triple);
-			DBObject combinedDoc = createSubPredObjDoc(subjectDoc, predObjDoc);
-			for(RelationPattern rpattern : relationPatterns) {
-				//create a queue for each rpattern
-				QueueHandler2 queueHandler = new QueueHandler2(
-						rpattern.getConnectingPattern(), threadPool);
-				//same for ConnectingRelation.OBJ_SUB and 
-				//ConnectingRelation.OBJ_OBJ
-				dependentQueueMap.put(triple.getObject(), queueHandler);
-			}
+			handleRelationPatterns(triple, relationPatterns);
 			return combinedDoc;
+		}
+	}
+	
+	public DBObject handlePipelinePattern(RelationPattern relationPattern, 
+			Long joinID) {
+		PipelinePattern pipelinePattern = (PipelinePattern) 
+				relationPattern.getConnectingPattern();
+		NumericalTriplePattern triple = pipelinePattern.getTriple();
+		//use joinID as either subject or object depending on the relation
+		//in connecting pattern
+		DBObject subjectDoc;
+		DBObject predObjDoc;
+		ConnectingRelation connectingRelation = 
+				relationPattern.getConnectingRelation();
+		if(connectingRelation == ConnectingRelation.OBJ_SUB) {
+			subjectDoc = createSubjectDoc(triple, joinID);
+			predObjDoc = handleNumericalTriplePattern(triple, null);
+		}
+		else {
+			//join on object
+			subjectDoc = createSubjectDoc(triple, null);
+			predObjDoc = handleNumericalTriplePattern(triple, joinID);
+		}
+		DBObject combinedDoc = createSubPredObjDoc(subjectDoc, predObjDoc);
+		List<RelationPattern> relationPatterns = 
+				pipelinePattern.getRelationPatterns();
+		if(relationPatterns.isEmpty()) {
+			//treat it as a NumericalTriplePattern
+			return combinedDoc;
+		}
+		else {
+			handleRelationPatterns(triple, relationPatterns);
+			return combinedDoc;
+		}
+	}
+	
+	private void handleRelationPatterns(NumericalTriplePattern triple, 
+			List<RelationPattern> relationPatterns) {
+		SubObj subObj = new SubObj(triple.getSubject(), triple.getObject());
+		predSubObjMap.put(Long.valueOf(
+				triple.getPredicate().getEdgeLabel()), subObj);
+		for(RelationPattern rpattern : relationPatterns) {
+			//create a queue for each rpattern
+			QueueHandler2 queueHandler = new QueueHandler2(
+					rpattern, threadPool);
+			//same for ConnectingRelation.OBJ_SUB and 
+			//ConnectingRelation.OBJ_OBJ
+			dependentQueueMap.put(triple.getObject(), queueHandler);
 		}
 	}
 }

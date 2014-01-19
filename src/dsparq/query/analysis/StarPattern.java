@@ -34,7 +34,7 @@ public class StarPattern extends QueryPattern {
 	 * @param pattern pattern to insert if the given vertex is found
 	 */
 	public void searchAndAdd(String vertex, ConnectingRelation relation, 
-			QueryPattern connectingPattern) {
+			QueryPattern connectingPattern, String connectingVariable) {
 		boolean replacePattern = false;
 		int replacementIndex = -1;
 		PipelinePattern replacementPattern = null;
@@ -43,7 +43,8 @@ public class StarPattern extends QueryPattern {
 			if(queryPattern instanceof PipelinePattern) {
 				PipelinePattern ppattern = (PipelinePattern)queryPattern;
 				if(ppattern.getTriple().getObject().equals(vertex.toString())) {
-					ppattern.addRelationTriple(relation, connectingPattern);
+					ppattern.addRelationTriple(relation, connectingPattern, 
+							connectingVariable);
 				}
 			}
 			else if(queryPattern instanceof NumericalTriplePattern) {
@@ -52,7 +53,8 @@ public class StarPattern extends QueryPattern {
 				if(ntpattern.getObject().equals(vertex.toString())) {
 					PipelinePattern ppattern = new PipelinePattern();
 					ppattern.setTriple(ntpattern);
-					ppattern.addRelationTriple(relation, connectingPattern);
+					ppattern.addRelationTriple(relation, connectingPattern, 
+							connectingVariable);
 					replacePattern = true;
 					replacementIndex = i;
 					replacementPattern = ppattern;

@@ -3,27 +3,25 @@ package dsparq.query.analysis;
 public class RelationPattern {
 	private ConnectingRelation connectingRelation;
 	private QueryPattern connectingPattern;
+	private String connectingVariable;
 	
 	public RelationPattern(ConnectingRelation connectingRelation, 
-			QueryPattern connectingPattern) {
-		this.setConnectingRelation(connectingRelation);
-		this.setConnectingPattern(connectingPattern);
+			QueryPattern connectingPattern, String connectingVariable) {
+		this.connectingRelation = connectingRelation;
+		this.connectingPattern = connectingPattern;
+		this.connectingVariable = connectingVariable;
 	}
 
 	public ConnectingRelation getConnectingRelation() {
 		return connectingRelation;
 	}
 
-	public void setConnectingRelation(ConnectingRelation connectingRelation) {
-		this.connectingRelation = connectingRelation;
-	}
-
 	public QueryPattern getConnectingPattern() {
 		return connectingPattern;
 	}
 
-	public void setConnectingPattern(QueryPattern connectingPattern) {
-		this.connectingPattern = connectingPattern;
+	public String getConnectingVariable() {
+		return connectingVariable;
 	}
 }
 
