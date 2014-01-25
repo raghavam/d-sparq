@@ -80,33 +80,59 @@ public class ThreadedQueryExecutor2 extends PatternHandler {
 				connectivityInspector = 
 					new ConnectivityInspector<RDFVertex, RelationshipEdge>(
 							directedQueryGraph);
-			List<Set<RDFVertex>> connectedSets = 
+			List<Set<RDFVertex>> disconnectedSets = 
 					connectivityInspector.connectedSets();
 			List<QueryPattern> queryPatterns = 
-					new ArrayList<QueryPattern>(connectedSets.size());
+					new ArrayList<QueryPattern>(disconnectedSets.size());
 			BiConFinder biconFinder = new BiConFinder();
-			if(connectedSets.size() == 1) {
+			if(disconnectedSets.size() == 1) {
 				queryPatterns.add(biconFinder.getQueryPatterns(
 						undirectedQueryGraph, directedQueryGraph));
 			}
 			else {
 				//get the graphs associated with each connected vertex set.
-				for(Set<RDFVertex> disconnectedSet : connectedSets) {
-					System.out.println("ConnectedSet: " + disconnectedSet);
+				for(Set<RDFVertex> disconnectedSet : disconnectedSets) {
+					System.out.println("DisconnectedSet: " + disconnectedSet);
+					SimpleDirectedGraph<RDFVertex, RelationshipEdge> 
+						dirGraph = 
+						new SimpleDirectedGraph<RDFVertex, RelationshipEdge>(
+							new ClassBasedEdgeFactory<RDFVertex, RelationshipEdge>(
+									RelationshipEdge.class));
+					SimpleGraph<RDFVertex, DefaultEdge> 
+							undirGraph = new SimpleGraph<RDFVertex, DefaultEdge>(
+									DefaultEdge.class);
 					//construct a graph using these vertices
-					for(RDFVertex v1 : disconnectedSet)
+					for(RDFVertex v1 : disconnectedSet) {
+						dirGraph.addVertex(v1);
+						undirGraph.addVertex(v1);
 						for(RDFVertex v2 : disconnectedSet) {
 							RelationshipEdge e = directedQueryGraph.getEdge(v1, v2);
-							if(e != null)
-							System.out.println("Between " + v1 + " and " + 
-									v2 + ": " + e);
+							if(e != null) {
+								dirGraph.addVertex(v2);
+								undirGraph.addVertex(v2);
+								dirGraph.addEdge(v1, v2, e);
+								undirGraph.addEdge(v1, v2);
+							}
 						}
+					}
+					queryPatterns.add(biconFinder.getQueryPatterns(
+							undirGraph, dirGraph));
 				}
 			}
 			System.out.println("Query Patterns: ");
-			for(QueryPattern queryPattern : queryPatterns)
+			for(QueryPattern queryPattern : queryPatterns) {
 				System.out.println(queryPattern.toString() + "\n");
+				threadPool.execute(new PatternExecutor(queryPattern));
+			}
 //			executePattern(queryPattern);
+			synchPhaser.arriveAndAwaitAdvance();
+			threadPool.shutdown();	
+			if(!threadPool.isTerminated()) {
+				// wait for the tasks to complete
+				boolean isTerminated = threadPool.awaitTermination(
+						5, TimeUnit.SECONDS);
+				System.out.println("isTerminated: " + isTerminated);
+			}
 		}
 		finally {
 			System.out.println(">>>>>>>Closing Mongo now...");
@@ -202,14 +228,6 @@ public class ThreadedQueryExecutor2 extends PatternHandler {
 				"   Total results: " + resultCount);
 		cursor.close();
 //		writer.close();
-		synchPhaser.arriveAndAwaitAdvance();
-		threadPool.shutdown();	
-		if(!threadPool.isTerminated()) {
-			// wait for the tasks to complete
-			boolean isTerminated = threadPool.awaitTermination(
-					5, TimeUnit.SECONDS);
-			System.out.println("isTerminated: " + isTerminated);
-		}
 	}
 	
 	/**
@@ -382,5 +400,26 @@ public class ThreadedQueryExecutor2 extends PatternHandler {
 		double secs = Util.getElapsedTime(start);
 		System.out.println("Total Secs: " + secs + "  For " + 
 				numTimes + ": " + secs/numTimes);
+	}
+	
+	class PatternExecutor implements Runnable {
+
+		QueryPattern queryPattern;
+		PatternExecutor(QueryPattern queryPattern) {
+			this.queryPattern = queryPattern;
+		}
+		
+		@Override
+		public void run() {
+			try {
+				synchPhaser.register();
+				executePattern(queryPattern);
+			}catch (Exception e) {
+				e.printStackTrace();
+			}
+			finally {
+				synchPhaser.arrive();
+			}
+		}		
 	}
 }
