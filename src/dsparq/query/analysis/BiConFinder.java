@@ -44,6 +44,7 @@ public class BiConFinder {
 		directedQueryGraph = directedGraph;
 		Set<RDFVertex> vertices = undirectedQueryGraph.vertexSet();
 		QueryPattern queryPattern = null;
+		clearVars();
 			
 		for(RDFVertex v : vertices)
 			num.put(v.getLabel(), new Integer(0));
@@ -51,6 +52,14 @@ public class BiConFinder {
 			if(num.get(v.getLabel()) == 0) 
 				queryPattern = bicon(v, null);
 		return queryPattern;
+	}
+	
+	private void clearVars() {
+		num.clear();
+		low.clear();
+		vertexPatternMap.clear();
+		articulationPoints.clear();
+		notArticulationPoints.clear();
 	}
 	
 	private QueryPattern bicon(RDFVertex v, RDFVertex u) throws Exception {
