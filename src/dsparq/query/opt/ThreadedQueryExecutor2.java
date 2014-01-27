@@ -92,7 +92,6 @@ public class ThreadedQueryExecutor2 extends PatternHandler {
 			else {
 				//get the graphs associated with each connected vertex set.
 				for(Set<RDFVertex> disconnectedSet : disconnectedSets) {
-					System.out.println("DisconnectedSet: " + disconnectedSet);
 					SimpleDirectedGraph<RDFVertex, RelationshipEdge> 
 						dirGraph = 
 						new SimpleDirectedGraph<RDFVertex, RelationshipEdge>(
@@ -119,9 +118,10 @@ public class ThreadedQueryExecutor2 extends PatternHandler {
 							undirGraph, dirGraph));
 				}
 			}
-			System.out.println("Query Patterns: ");
+			System.out.println("\nQuery Patterns: ");
 			for(QueryPattern queryPattern : queryPatterns) {
 				System.out.println(queryPattern.toString() + "\n");
+				synchPhaser.register();
 				threadPool.execute(new PatternExecutor(queryPattern));
 			}
 //			executePattern(queryPattern);
@@ -161,7 +161,6 @@ public class ThreadedQueryExecutor2 extends PatternHandler {
 		else
 			throw new Exception("Unexpected type " + 
 						queryPattern.toString());
-		System.out.println("DependentQueueMap: " + dependentQueueMap.keySet());
 		DBCursor cursor; 
 		System.out.println("Limiting results to " + LIMIT_RESULTS + 
 				" for testing.....");
@@ -412,7 +411,6 @@ public class ThreadedQueryExecutor2 extends PatternHandler {
 		@Override
 		public void run() {
 			try {
-				synchPhaser.register();
 				executePattern(queryPattern);
 			}catch (Exception e) {
 				e.printStackTrace();

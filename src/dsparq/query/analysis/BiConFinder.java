@@ -19,7 +19,7 @@ import org.jgrapht.graph.SimpleGraph;
 public class BiConFinder {
 
 //	private Stack<Pair> stack;
-	private Map<String, Integer> num;
+//	private Map<String, Integer> num;
 	private Map<String, Integer> low;
 	private SimpleGraph<RDFVertex, DefaultEdge> undirectedQueryGraph;
 	private SimpleDirectedGraph<RDFVertex, RelationshipEdge> directedQueryGraph;
@@ -28,12 +28,20 @@ public class BiConFinder {
 	private int i = 0;
 	private Map<String, QueryPattern> vertexPatternMap;
 	
+	private Map<String, Color> vertexColorMap;
+	private Map<String, String> vertexPredMap;
+	private Map<String, Integer> d;
+	
 	public BiConFinder() {
 		articulationPoints = new HashSet<String>();
 		notArticulationPoints = new HashSet<String>();
-		num = new HashMap<String, Integer>();
+//		num = new HashMap<String, Integer>();
 		low = new HashMap<String, Integer>();
 		vertexPatternMap = new HashMap<String, QueryPattern>();
+		
+		vertexColorMap = new HashMap<String, Color>();
+		vertexPredMap = new HashMap<String, String>();
+		d = new HashMap<String, Integer>();
 	}
 	
 	public QueryPattern getQueryPatterns(
@@ -45,59 +53,71 @@ public class BiConFinder {
 		Set<RDFVertex> vertices = undirectedQueryGraph.vertexSet();
 		QueryPattern queryPattern = null;
 		clearVars();
-			
-		for(RDFVertex v : vertices)
-			num.put(v.getLabel(), new Integer(0));
-		for(RDFVertex v : vertices)
-			if(num.get(v.getLabel()) == 0) 
-				queryPattern = bicon(v, null);
+		
+		RDFVertex root = null;
+		for(RDFVertex v : vertices) {
+//			num.put(v.getLabel(), new Integer(0));
+			vertexColorMap.put(v.getLabel(), Color.WHITE);
+			if(directedGraph.inDegreeOf(v) == 0)
+				root = v;
+		}
+//		for(RDFVertex v : vertices)
+//			if(num.get(v.getLabel()) == 0) 
+//				queryPattern = bicon(v, null);
+		queryPattern = findArticulationPoints(root);		
 		return queryPattern;
 	}
 	
 	private void clearVars() {
-		num.clear();
 		low.clear();
+		d.clear();
+		vertexColorMap.clear();
+		vertexPredMap.clear();
 		vertexPatternMap.clear();
 		articulationPoints.clear();
 		notArticulationPoints.clear();
+		i = 0;
 	}
 	
-	private QueryPattern bicon(RDFVertex v, RDFVertex u) throws Exception {
+	private QueryPattern findArticulationPoints(RDFVertex u) throws Exception {
+		vertexColorMap.put(u.getLabel(), Color.GRAY);
 		i = i + 1;
-		num.put(v.getLabel(), i);
-		low.put(v.getLabel(), i);
+		low.put(u.getLabel(), i);
+		d.put(u.getLabel(), i);
 		boolean foundArticulationPoint = false;
-		QueryPattern pattern = null; 
-		Set<DefaultEdge> adjacentEdges = undirectedQueryGraph.edgesOf(v);
+		QueryPattern pattern = null;
+		Set<DefaultEdge> adjacentEdges = undirectedQueryGraph.edgesOf(u);
 		for(DefaultEdge adjEdge : adjacentEdges) {
 			RDFVertex t = undirectedQueryGraph.getEdgeTarget(adjEdge);
 			RDFVertex s = undirectedQueryGraph.getEdgeSource(adjEdge);
-			RDFVertex w = t.equals(v) ? s : t;
-			if(num.get(w.getLabel()) == 0) {
-				bicon(w, v);
-				int min = Math.min(low.get(v.getLabel()), 
-						low.get(w.getLabel()));
-				low.put(v.getLabel(), min);
-				if(low.get(w.getLabel()) >= num.get(v.getLabel())) {
-					if(directedQueryGraph.outDegreeOf(v) >= 2 && 
-							directedQueryGraph.inDegreeOf(v) == 0) {
-						if(!notArticulationPoints.contains(v.getLabel())) {
-							notArticulationPoints.add(v.getLabel());
+			RDFVertex v = t.equals(u) ? s : t;
+			if(vertexColorMap.get(v.getLabel()) == Color.WHITE) {
+				vertexPredMap.put(v.getLabel(), u.getLabel());
+				findArticulationPoints(v);
+				int min = Math.min(low.get(u.getLabel()), 
+						low.get(v.getLabel()));
+				low.put(u.getLabel(), min);
+				if(low.get(v.getLabel()) >= d.get(u.getLabel())) {
+					//u is the articulation point
+					if(directedQueryGraph.outDegreeOf(u) >= 2 && 
+							directedQueryGraph.inDegreeOf(u) == 0) {
+						if(!notArticulationPoints.contains(u.getLabel())) {
+							notArticulationPoints.add(u.getLabel());
 							foundArticulationPoint = true;
-//							System.out.println("Skipping Articultion point: " + v);
+//							System.out.println("Skipping Articultion point: " + u);
 						}
 					}
 					else {
-						if(!articulationPoints.contains(v.getLabel())) {
-							articulationPoints.add(v.getLabel());
+						if(!articulationPoints.contains(u.getLabel())) {
+							articulationPoints.add(u.getLabel());
 							foundArticulationPoint = true;
 //							System.out.println("Articultion point: " + 
-//									v.getLabel());
+//									u.getLabel());
 						}
 					}			
 					if(foundArticulationPoint) {
 						Set<RelationshipEdge> outGoingEdges = 
-							directedQueryGraph.outgoingEdgesOf(v);
+							directedQueryGraph.outgoingEdgesOf(u);
 						if(outGoingEdges.size() == 1) {
 							RelationshipEdge e = outGoingEdges.iterator().next();
 							NumericalTriplePattern triple = 
@@ -159,17 +179,15 @@ public class BiConFinder {
 //						else
 //							throw new Exception("OutDegree of " + v + " is " + 
 //									outGoingEdges.size());
-						checkIncomingEdges(v, pattern);						
-						vertexPatternMap.put(v.getLabel(), pattern);
+						checkIncomingEdges(u, pattern);						
+						vertexPatternMap.put(u.getLabel(), pattern);
 					}
 					foundArticulationPoint = false;
 				}
 			}
-			else if((num.get(w.getLabel()) < num.get(v.getLabel())) 
-					&& (!w.equals(u))) {
-				int min = Math.min(low.get(v.getLabel()), 
-						num.get(w.getLabel()));
-				low.put(v.getLabel(), min);
+			else if(!v.getLabel().equals(vertexPredMap.get(u.getLabel()))) {
+				int min = Math.min(low.get(u.getLabel()), d.get(v.getLabel()));
+				low.put(u.getLabel(), min);
 			}
 		}
 		return pattern;
@@ -230,4 +248,8 @@ public class BiConFinder {
 	public static void main(String[] args) throws Exception {
 		new BiConFinder().getQueryPatterns(null, null);
 	}
+	
+	enum Color { WHITE, GRAY }
 }
+
+
