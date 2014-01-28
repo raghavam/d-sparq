@@ -1,5 +1,8 @@
 package dsparq.query.opt;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +41,7 @@ public class PatternHandler {
 	protected HashMap<Long, SubObj> predSubObjMap; 
 	//Object is the key. This is useful for pipeline patterns.
 	protected Map<String, QueueHandler2> dependentQueueMap;
+	private DBCollection predicateSelectivityCollection;
 	
 	protected final int LIMIT_RESULTS = 100;			//for testing, remove later
 	
@@ -51,6 +55,8 @@ public class PatternHandler {
 			e.printStackTrace();
 		}
 		localDB = localMongo.getDB(Constants.MONGO_RDF_DB);
+		predicateSelectivityCollection = localDB.getCollection(
+				Constants.MONGO_PREDICATE_SELECTIVITY);
 		starSchemaCollection = localDB.getCollection(
 				Constants.MONGO_STAR_SCHEMA);
 		synchPhaser = new Phaser(1);
@@ -132,15 +138,15 @@ public class PatternHandler {
 	
 	public DBObject handleStarPattern(StarPattern starPattern, 
 			ConnectingRelation connectingRelation, String connectingVariable, 
-			Long joinID) {
-		//TODO: put in selectivity. Checking speed without selectivity first.
-//		reorderPatterns(starPattern);
-				
+			Long joinID) {				
 		List<QueryPattern> patterns = starPattern.getQueryPatterns();
 		if(patterns == null) {
 			System.out.println("No patterns to work with.");
 			return null;
 		}
+		//predicate selectivity based reordering
+		reorderPatterns(starPattern);
+				
 		//subject is same, pred-obj differ. 
 		boolean isSubjectRead = false;
 		BasicDBList conditions = new BasicDBList();
@@ -226,6 +232,48 @@ public class PatternHandler {
 		}	
 	}
 	
+	/**
+	 * Based on selectivity of the predicates, the patterns are reordered.
+	 * @param starPattern StarPattern to reorder
+	 */
+	private StarPattern reorderPatterns(StarPattern starPattern) {
+		List<QueryPattern> patterns = starPattern.getQueryPatterns();
+		List<PositionScore> posScoreList = 
+				new ArrayList<PositionScore>(patterns.size());
+		StarPattern reorderedStarPattern = new StarPattern();
+		for(int i=0; i<patterns.size(); i++) {
+			QueryPattern pattern = patterns.get(i);
+			NumericalTriplePattern ntp = null;
+			if(pattern instanceof NumericalTriplePattern) {
+				ntp = (NumericalTriplePattern) pattern;
+			}
+			else if(pattern instanceof PipelinePattern) {
+				PipelinePattern pipelinePattern = (PipelinePattern) pattern;
+				ntp = pipelinePattern.getTriple();
+			}
+			//else: cannot be any other type
+			
+			String predID = ntp.getPredicate().getEdgeLabel();
+			if(predID.charAt(0) != '?') {
+				DBObject countDoc = predicateSelectivityCollection.findOne(
+						new BasicDBObject(Constants.FIELD_HASH_VALUE, predID));
+				int count = (Integer) countDoc.get(
+						Constants.FIELD_PRED_SELECTIVITY);
+				posScoreList.add(new PositionScore(i, count));
+			}
+			else {
+				//make this the largest count predicate
+				posScoreList.add(new PositionScore(i, Integer.MAX_VALUE));
+			}
+		}
+		Collections.sort(posScoreList, new ScoreComparator());
+		for(PositionScore pscore : posScoreList) {
+			reorderedStarPattern.addQueryPattern(
+					patterns.get(pscore.position));
+		}
+		return reorderedStarPattern;
+	}
+	
 	public DBObject handlePipelinePattern(PipelinePattern pipelinePattern) {
 		NumericalTriplePattern triple = pipelinePattern.getTriple();
 		DBObject subjectDoc = createSubjectDoc(triple, null);
@@ -307,4 +355,23 @@ class SubObj {
 		subject = null;
 		this.object = object;
 	}
+}
+
+class PositionScore {
+	int position;
+	int score;
+	
+	PositionScore(int position, int score) {
+		this.position = position;
+		this.score = score;
+	}
+}
+
+class ScoreComparator implements Comparator<PositionScore> {
+
+	@Override
+	public int compare(PositionScore ps1, PositionScore ps2) {
+		return ps1.score - ps2.score;
+	}
+	
 }

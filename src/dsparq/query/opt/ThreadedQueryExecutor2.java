@@ -55,14 +55,11 @@ public class ThreadedQueryExecutor2 extends PatternHandler {
 	private SimpleGraph<RDFVertex, DefaultEdge> undirectedQueryGraph;
 	private SimpleDirectedGraph<RDFVertex, RelationshipEdge> directedQueryGraph;
 	private DBCollection idValCollection;
-	private DBCollection predicateSelectivityCollection;
 //	private static String outputFileName;
 	
 	public ThreadedQueryExecutor2() {
 		idCache = new HashMap<String, String>();
 		idValCollection = localDB.getCollection(Constants.MONGO_IDVAL_COLLECTION);	
-		predicateSelectivityCollection = localDB.getCollection(
-				Constants.MONGO_PREDICATE_SELECTIVITY);
 	}
 	
 	public void processQuery(String query) throws Exception {
@@ -227,37 +224,6 @@ public class ThreadedQueryExecutor2 extends PatternHandler {
 				"   Total results: " + resultCount);
 		cursor.close();
 //		writer.close();
-	}
-	
-	/**
-	 * Based on selectivity of the predicates, the patterns are reordered.
-	 * @param starPattern
-	 */
-	private void reorderPatterns(StarPattern starPattern) throws Exception {
-		StarPattern reOrderedStarPattern = new StarPattern();
-		List<QueryPattern> patterns = starPattern.getQueryPatterns();
-		List<Integer> countList = new ArrayList<Integer>(patterns.size());
-		for(QueryPattern pattern : patterns) {
-			if(pattern instanceof NumericalTriplePattern) {
-				NumericalTriplePattern ntp = (NumericalTriplePattern) pattern;
-				String predID = ntp.getPredicate().getEdgeLabel();
-				if(predID.charAt(0) != '?') {
-					DBObject countDoc = predicateSelectivityCollection.findOne(
-							new BasicDBObject(Constants.FIELD_HASH_VALUE, predID));
-					int count = (Integer) countDoc.get(
-							Constants.FIELD_PRED_SELECTIVITY);
-					//determine the position of this count in the countList
-				}
-				else {
-					//make this the largest count predicate
-				}
-			}
-			else if(pattern instanceof PipelinePattern) {
-				
-			}
-			else
-				throw new Exception("Unrecognised type");
-		}
 	}
 	
 	private void printGraph() {
