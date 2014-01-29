@@ -20,6 +20,7 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
 
 import dsparq.misc.Constants;
 import dsparq.misc.HostInfo;
@@ -58,9 +59,9 @@ public class PartitionedTripleLoader {
 			Matcher matcher = pattern.matcher(hostName);
 			matcher.find();
 			hostID = Integer.parseInt(matcher.group());
-			mongo = new Mongo(mongosInfo.get(hostID%mongosCount).getHost(), 
+			mongo = new MongoClient(mongosInfo.get(hostID%mongosCount).getHost(), 
 						mongosInfo.get(hostID%mongosCount).getPort());
-			Mongo localMongo = new Mongo("localhost", 10000);
+			Mongo localMongo = new MongoClient("localhost", 10000);
 			DB localDB = localMongo.getDB(Constants.MONGO_RDF_DB);
 			DB db = mongo.getDB(Constants.MONGO_RDF_DB);
 			tripleCollection = db.getCollection(
