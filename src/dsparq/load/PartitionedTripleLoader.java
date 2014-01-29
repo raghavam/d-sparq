@@ -32,7 +32,7 @@ import dsparq.util.Util;
  * all the triples which have the same subject as the 
  * vertices into the local partition
  * 
- * @author raghava
+ * @author Raghava
  *
  */
 public class PartitionedTripleLoader {
@@ -114,6 +114,7 @@ public class PartitionedTripleLoader {
 	}
 	
 	public void loadTriplesInStarSchema() throws Exception {
+		//TODO: Remove the hard coding of file/server names.
 		// since partition starts from nimbus3;
 		int partitionID = hostID - 3;
 		String fileName = "triples" + partitionID + "-r-0000" + partitionID;
@@ -169,6 +170,7 @@ public class PartitionedTripleLoader {
 	}
 	
 	public void writeTriples() throws Exception {
+		//TODO: Remove the hard coding of file/server names.
 		// since partition starts from nimbus3;
 		int partitionID = hostID - 3;
 		String fileName = "triples" + partitionID + "-r-0000" + partitionID;
@@ -222,8 +224,8 @@ public class PartitionedTripleLoader {
 	}
 	
 	public void createIndexes() {
-		ptripleCollection.ensureIndex(new BasicDBObject(
-							Constants.FIELD_TRIPLE_SUBJECT, 1));
+//		ptripleCollection.ensureIndex(new BasicDBObject(
+//							Constants.FIELD_TRIPLE_SUBJECT, 1));
 //		ptripleCollection.ensureIndex(new BasicDBObject(
 //				Constants.FIELD_TRIPLE_PREDICATE, 1));
 //		ptripleCollection.ensureIndex(new BasicDBObject(
@@ -238,8 +240,12 @@ public class PartitionedTripleLoader {
 	
 	public static void main(String[] args) throws Exception {
 		GregorianCalendar start = new GregorianCalendar();
-		new PartitionedTripleLoader().loadTriplesInStarSchema();
-		System.out.println("Done");
-		Util.getElapsedTime(start);
+		PartitionedTripleLoader tripleLoader = new PartitionedTripleLoader();
+		tripleLoader.loadTriplesInStarSchema();
+		tripleLoader.createIndexes();
+		//Split the two tasks of loading triples to MongoDB and writing to 
+		//a file just to note the time taken for each task.
+//		tripleLoader.writeTriples();
+		System.out.println("Time taken (millis): " + Util.getElapsedTime(start));
 	}
 }
