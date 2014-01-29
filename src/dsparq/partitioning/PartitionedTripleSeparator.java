@@ -99,7 +99,8 @@ public class PartitionedTripleSeparator extends Configured implements Tool {
 
 		if (args.length != 2) {
 			String msg = "Incorrect arguments -- requires 2 arguments.\n\t " +
-					"1) directory containing vertex-partition ID pairs \n\t" +
+					"1) directory containing vertex-partition ID pairs " +
+							"and nt file in KV format (sub|pred|obj) \n\t" +
 					"2) path to output directory which contains triples \n";
 			throw new Exception(msg + this.getClass());
 		}
