@@ -39,6 +39,13 @@ import dsparq.misc.PropertyFileHandler;
 import dsparq.util.LRUCache;
 import dsparq.util.Util;
 
+/**
+ * Takes triples as input and puts out triples in 
+ * Subject|Predicate|Object format where Subject/Predicate/Object
+ * are in their equivalent IDs. This format is suitable for MR programs.
+ * 
+ * @author Raghava
+ */
 public class KVFileCreatorMR extends Configured implements Tool {
 
 	private static class Map extends MapReduceBase implements 
@@ -66,7 +73,6 @@ public class KVFileCreatorMR extends Configured implements Tool {
 	Reducer<Text, Text, Text, Text> {
 		
 		private ShardedJedis shardedJedis; 
-		private Jedis idStore;
 		private LRUCache<String, String> dictionary;
 		
 		@Override
@@ -81,7 +87,6 @@ public class KVFileCreatorMR extends Configured implements Tool {
 						Constants.INFINITE_TIMEOUT));
 			}
 			shardedJedis = new ShardedJedis(shards, Hashing.MURMUR_HASH);
-			idStore = new Jedis("nimbus2", 6479);
 			dictionary = new LRUCache<String, String>(100000);
 		}
 		
@@ -138,7 +143,6 @@ public class KVFileCreatorMR extends Configured implements Tool {
 		@Override
 		public void close() throws IOException {
 			shardedJedis.disconnect();
-			idStore.disconnect();
 			dictionary.clear();
 		}
 	}
