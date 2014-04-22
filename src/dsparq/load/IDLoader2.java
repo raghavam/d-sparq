@@ -65,7 +65,7 @@ public class IDLoader2 extends Configured implements Tool {
 			String[] tripleTokens = key.toString().trim().split("\\s");
 			output.collect(new Text(tripleTokens[Constants.POSITION_SUBJECT]), 
 					new Text(tripleTokens[Constants.POSITION_PREDICATE] +
-					         Constants.OUTPUT_DELIMITER + 
+					         Constants.TRIPLE_TERM_DELIMITER + 
 					         tripleTokens[Constants.POSITION_OBJECT]));
 		}
 	}
@@ -149,9 +149,9 @@ public class IDLoader2 extends Configured implements Tool {
 					
 					// output the values 
 					// TODO: isType is not same as isLiteral. Replace it later
-					output.collect(new Text(subjectID + Constants.OUTPUT_DELIMITER + 
-							predicateID + Constants.OUTPUT_DELIMITER +
-							objectID + Constants.OUTPUT_DELIMITER +
+					output.collect(new Text(subjectID + Constants.TRIPLE_TERM_DELIMITER + 
+							predicateID + Constants.TRIPLE_TERM_DELIMITER +
+							objectID + Constants.TRIPLE_TERM_DELIMITER +
 							isType), new Text());
 				}
 			}

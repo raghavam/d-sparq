@@ -60,7 +60,7 @@ public class KVFileCreatorMR extends Configured implements Tool {
 			Node[] nodes = nxParser.next();		
 			output.collect(new Text(nodes[Constants.POSITION_SUBJECT].toString()), 
 					new Text(nodes[Constants.POSITION_PREDICATE].toString() +
-					         Constants.OUTPUT_DELIMITER + 
+					         Constants.TRIPLE_TERM_DELIMITER + 
 					         nodes[Constants.POSITION_OBJECT].toString()));
 			reader.close();
 		}
@@ -125,8 +125,8 @@ public class KVFileCreatorMR extends Configured implements Tool {
 					}
 					if(objID == null)
 						throw new Exception("objID is null: " + predObj[1]);
-					output.collect(new Text(subID + Constants.OUTPUT_DELIMITER + 
-							predID + Constants.OUTPUT_DELIMITER + objID), new Text(""));
+					output.collect(new Text(subID + Constants.TRIPLE_TERM_DELIMITER + 
+							predID + Constants.TRIPLE_TERM_DELIMITER + objID), new Text(""));
 				}
 			}
 			catch(Exception e) {

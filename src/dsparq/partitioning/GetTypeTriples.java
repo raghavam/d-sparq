@@ -71,8 +71,8 @@ public class GetTypeTriples extends Configured implements Tool{
 	        String[] tokenizer = line.split(Constants.REGEX_DELIMITER);
 	        
 	        StringBuilder triple = new StringBuilder();
-	        triple.append(tokenizer[Constants.POSITION_SUBJECT]).append(Constants.OUTPUT_DELIMITER). 
-			append(tokenizer[Constants.POSITION_PREDICATE]).append(Constants.OUTPUT_DELIMITER).
+	        triple.append(tokenizer[Constants.POSITION_SUBJECT]).append(Constants.TRIPLE_TERM_DELIMITER). 
+			append(tokenizer[Constants.POSITION_PREDICATE]).append(Constants.TRIPLE_TERM_DELIMITER).
 			append(tokenizer[Constants.POSITION_OBJECT]);
 	        
 	        if (tokenizer[Constants.POSITION_PREDICATE].

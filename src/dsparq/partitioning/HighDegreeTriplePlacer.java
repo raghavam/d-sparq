@@ -58,7 +58,7 @@ public class HighDegreeTriplePlacer extends Configured implements Tool {
 			if(tokens[Constants.POSITION_PREDICATE].equals(Constants.PREDICATE_TYPE))
 				output.collect(new Text(tokens[Constants.POSITION_OBJECT]), 
 								new Text(tokens[Constants.POSITION_SUBJECT] + 
-										Constants.OUTPUT_DELIMITER + 
+										Constants.TRIPLE_TERM_DELIMITER + 
 										Constants.PREDICATE_TYPE));
 			else
 				output.collect(new Text(tokens[Constants.POSITION_SUBJECT]), 

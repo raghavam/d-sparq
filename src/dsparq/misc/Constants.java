@@ -70,7 +70,7 @@ public interface Constants {
 	
 	public static final String FIELD_PRED_SELECTIVITY = "count";
 	
-	public static final String OUTPUT_DELIMITER = "|";	
+	public static final String TRIPLE_TERM_DELIMITER = "|";	
 	public static final String REGEX_DELIMITER = "\\|";
 	
 	public static final String RDF_TYPE_URI = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";

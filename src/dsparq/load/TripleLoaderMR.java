@@ -71,7 +71,7 @@ public class TripleLoaderMR extends Configured implements Tool {
 			Node[] nodes = nxParser.next();	
 			StringBuilder predObj = new StringBuilder();
 			predObj.append(nodes[1].toString()).
-				append(Constants.OUTPUT_DELIMITER);
+				append(Constants.TRIPLE_TERM_DELIMITER);
 			String obj = nodes[2].toString();
 			if(nodes[2] instanceof Literal) {
 				//make this in the same form as Jena sees it.

@@ -63,7 +63,7 @@ public class UndirectedGraphPartitioner2 extends Configured implements Tool {
 				long s = values.next().get();
 				if(!adjVertices.contains(s)) {
 					adjVertices.add(s);
-					adjVertexStr.append(s).append(Constants.OUTPUT_DELIMITER);
+					adjVertexStr.append(s).append(Constants.TRIPLE_TERM_DELIMITER);
 				}
 			}
 			adjVertexStr.deleteCharAt(adjVertexStr.length()-1);

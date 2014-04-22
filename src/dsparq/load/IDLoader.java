@@ -100,7 +100,7 @@ public class IDLoader {
 				if(insertedID == prevID)
 					idCount++;
 				tripleDocument.put(Constants.FIELD_TRIPLE_SUBJECT, insertedID);
-				kvLine.append(insertedID).append(Constants.OUTPUT_DELIMITER);
+				kvLine.append(insertedID).append(Constants.TRIPLE_TERM_DELIMITER);
 				
 				// check if predicate is "rdf:type"
 				String predicate = triple.getPredicate().toString();
@@ -117,7 +117,7 @@ public class IDLoader {
 						 (prevID != Long.parseLong(Constants.PREDICATE_TYPE)))
 					predCount++;
 				tripleDocument.put(Constants.FIELD_TRIPLE_PREDICATE, insertedID);
-				kvLine.append(insertedID).append(Constants.OUTPUT_DELIMITER);
+				kvLine.append(insertedID).append(Constants.TRIPLE_TERM_DELIMITER);
 				
 				// this was required because METIS requires IDs to be in a 
 				// sequence and by removing type triples, there were holes in
@@ -139,7 +139,7 @@ public class IDLoader {
 					idCount++;		
 				tripleDocument.put(Constants.FIELD_TRIPLE_OBJECT, insertedID);
 				kvLine.append(insertedID).
-					append(Constants.OUTPUT_DELIMITER).append(isLiteral);
+					append(Constants.TRIPLE_TERM_DELIMITER).append(isLiteral);
 				
 				tripleCollection.insert(tripleDocument);
 				// write to file in kv format for Hadoop jobs
