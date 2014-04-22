@@ -28,12 +28,9 @@ import org.apache.hadoop.util.ToolRunner;
 import org.semanticweb.yars.nx.Node;
 import org.semanticweb.yars.nx.parser.NxParser;
 
-import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisShardInfo;
 import redis.clients.jedis.ShardedJedis;
 import redis.clients.util.Hashing;
-
-
 import dsparq.misc.Constants;
 import dsparq.misc.PropertyFileHandler;
 import dsparq.util.LRUCache;
