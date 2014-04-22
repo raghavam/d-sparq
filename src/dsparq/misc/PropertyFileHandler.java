@@ -54,7 +54,7 @@ public class PropertyFileHandler {
 		return hostList;
 	}
 	
-	//using only one mongos now
+	//using only one mongos (router) for now
 	@Deprecated
 	public List<HostInfo> getAllMongoRouters() {
 		List<HostInfo> hostList = new ArrayList<HostInfo>();
