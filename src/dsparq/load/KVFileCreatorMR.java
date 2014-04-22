@@ -100,7 +100,7 @@ public class KVFileCreatorMR extends Configured implements Tool {
 				if(dictionary.containsKey(subDigest))
 					subID = dictionary.get(subDigest);
 				else {
-					subID = shardedJedis.hget(subDigest, "id");
+					subID = shardedJedis.get(subDigest);
 					dictionary.put(subDigest, subID);
 				}
 				if(subID == null)
@@ -113,11 +113,8 @@ public class KVFileCreatorMR extends Configured implements Tool {
 					if(dictionary.containsKey(predDigest))
 						predID = dictionary.get(predDigest);
 					else {
-						Jedis shard = shardedJedis.getShard(predDigest);
-						shard.select(1);
-						predID = shard.hget(predDigest, "id");
+						predID = shardedJedis.get(predDigest);
 						dictionary.put(predDigest, predID);
-						shard.select(0);
 					}
 					if(predID == null)
 						throw new Exception("predID is null: " + predObj[0]);
@@ -126,7 +123,7 @@ public class KVFileCreatorMR extends Configured implements Tool {
 					if(dictionary.containsKey(objDigest))
 						objID = dictionary.get(objDigest);
 					else {
-						objID = shardedJedis.hget(objDigest, "id");
+						objID = shardedJedis.get(objDigest);
 						dictionary.put(objDigest, objID);
 					}
 					if(objID == null)
