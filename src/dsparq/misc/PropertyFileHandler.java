@@ -54,6 +54,8 @@ public class PropertyFileHandler {
 		return hostList;
 	}
 	
+	//using only one mongos now
+	@Deprecated
 	public List<HostInfo> getAllMongoRouters() {
 		List<HostInfo> hostList = new ArrayList<HostInfo>();
 		String shardCountStr = shardInfoProperties.getProperty("mongos.count");
@@ -64,6 +66,10 @@ public class PropertyFileHandler {
 			hostList.add(hostInfo);
 		}		
 		return hostList;
+	}
+	
+	public String getMongoRouter() {
+		return shardInfoProperties.getProperty("mongo.router");
 	}
 	
 	public int getMongosCount() {
