@@ -19,3 +19,7 @@ Add the executables to PATH environment variable.
 ## Instructions 
 
 1. Download the source code and compile using the command, ```ant jar```.
+2. Start a MongoDB sharded cluster (http://docs.mongodb.org/manual/tutorial/deploy-shard-cluster).
+3. In ShardInfo.properties, make the necessary changes i.e., put the information regarding cluster and MongoDB.
+4. The input triples should be in N-Triples format. If not, RDF2RDF (http://www.l3s.de/~minack/rdf2rdf) 
+can be used to convert the triples into N-Triples format.
