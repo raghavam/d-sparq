@@ -18,7 +18,4 @@ Add the executables to PATH environment variable.
 
 ## Instructions 
 
-1. Download the source code and compile using the command, 
-```ant 
-ant jar
-```
+1. Download the source code and compile using the command, ```ant jar```.
