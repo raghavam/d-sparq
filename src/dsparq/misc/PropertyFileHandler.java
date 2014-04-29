@@ -44,11 +44,12 @@ public class PropertyFileHandler {
 	
 	public List<HostInfo> getAllShardsInfo() {
 		List<HostInfo> hostList = new ArrayList<HostInfo>();
-		String shardCountStr = shardInfoProperties.getProperty("shard.count");
-		int shardCount = Integer.parseInt(shardCountStr);
-		for(int i=1; i<=shardCount; i++) {			
-			String[] hostPort = shardInfoProperties.getProperty("shard" + i).trim().split(":");
-			HostInfo hostInfo = new HostInfo(hostPort[0], Integer.parseInt(hostPort[1]));
+		String shardsStr = shardInfoProperties.getProperty("shards");
+		String[] shards = shardsStr.split(",");
+		for(String shard : shards) {
+			String[] hostPort = shard.split(":");
+			HostInfo hostInfo = new HostInfo(hostPort[0], 
+					Integer.parseInt(hostPort[1]));
 			hostList.add(hostInfo);
 		}		
 		return hostList;
