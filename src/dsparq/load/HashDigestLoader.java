@@ -73,6 +73,36 @@ public class HashDigestLoader {
 		}
 	}
 	
+	/**
+	 * counts the types i.e., rdf:type triples. This function is used
+	 * just for verification.
+	 * @param files
+	 */
+	public void countTypes(File[] files) {
+		try {
+			String line;
+			int count = 0;
+			for(File file : files) {
+				FileReader fileReader = new FileReader(file);
+				BufferedReader bufferedReader = new BufferedReader(fileReader);
+				while((line = bufferedReader.readLine()) != null) {
+					String[] splits = line.split(Constants.REGEX_DELIMITER);
+					long typeID = Long.parseLong(splits[1]);
+					if(typeID == -1) {
+						System.out.println(line);
+						count++;
+					}
+				}
+				bufferedReader.close();
+				fileReader.close();
+				System.out.println("Done with " + file.getName());
+				System.out.println("Count of types: " + count);
+			}
+		}catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
 	public static void main(String[] args) {
 		if(args.length != 1) {
 			System.out.println("Give the path to directory containing files");
@@ -85,6 +115,7 @@ public class HashDigestLoader {
 		}
 		GregorianCalendar start = new GregorianCalendar();
 		new HashDigestLoader().loadTripleIDsIntoDB(dir.listFiles());
+//		new HashDigestLoader().countTypes(dir.listFiles());
 		System.out.println("Time taken (secs): " + Util.getElapsedTime(start));
 	}
 
