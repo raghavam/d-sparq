@@ -305,7 +305,7 @@ public class MongoConnector {
 		PropertyFileHandler propertyFileHandler = 
 			PropertyFileHandler.getInstance();
 
-		HostInfo mongoSHostPort = propertyFileHandler.getMongoSHostInfo();
+		HostInfo mongoSHostPort = propertyFileHandler.getMongoRouterHostInfo();
 		Mongo mongo = new Mongo(mongoSHostPort.getHost(), mongoSHostPort.getPort());
 		//HostInfo mongoSHostPort = new HostInfo("ip-10-50-73-199.eu-west-1.compute.internal", 27017);
 /*		

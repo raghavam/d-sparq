@@ -50,7 +50,7 @@ public class QueueHandler {
 				new PatternContext(queryPattern, outputQueueID);
 		idQueueMap.put(inputQueueID, 
 						new LinkedBlockingQueue<Map<String, Long>>(
-							Constants.QUEUE_CAPACITY));
+							Constants.CONTAINER_CAPACITY));
 		idPatternMap.put(inputQueueID, patternContext);  	    
 	}
 	

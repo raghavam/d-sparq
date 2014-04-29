@@ -96,7 +96,7 @@ public class SampleQueryProcessor {
 					DBObject item = (DBObject) predObjItem;
 					if((Long)item.get(Constants.FIELD_TRIPLE_PREDICATE) == 19) {
 						authorList.add((Long)item.get(Constants.FIELD_TRIPLE_OBJECT));
-						if(authorList.size() >= Constants.QUEUE_CAPACITY) {
+						if(authorList.size() >= Constants.CONTAINER_CAPACITY) {
 							PathQueryProcessor processor = new PathQueryProcessor(authorList);
 							threadPool.execute(processor);
 							authorList.clear();
@@ -133,7 +133,7 @@ public class SampleQueryProcessor {
 					DBObject item = (DBObject) predObjItem;
 					if((Long)item.get(Constants.FIELD_TRIPLE_PREDICATE) == 19) {
 						authorList.add((Long)item.get(Constants.FIELD_TRIPLE_OBJECT));
-						if(authorList.size() >= Constants.QUEUE_CAPACITY) {
+						if(authorList.size() >= Constants.CONTAINER_CAPACITY) {
 							PathQueryProcessor processor = new PathQueryProcessor(authorList);
 							threadPool.execute(processor);
 							authorList.clear();

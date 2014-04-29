@@ -25,7 +25,7 @@ public class QueueHandler2 {
 	public QueueHandler2(RelationPattern connectingRelationPattern, 
 			ExecutorService threadExecutorService) {
 		this.connectingRelationPattern = connectingRelationPattern;
-		joinIDs = new LinkedBlockingQueue<Long>(Constants.QUEUE_CAPACITY);
+		joinIDs = new LinkedBlockingQueue<Long>(Constants.CONTAINER_CAPACITY);
 		this.threadPool = threadExecutorService;
 	}
 	

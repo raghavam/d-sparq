@@ -48,7 +48,7 @@ public class QueryExecutorWithoutOp2 {
 	public QueryExecutorWithoutOp2() {
 		try {
 			PropertyFileHandler propertyFileHandler = PropertyFileHandler.getInstance();
-			HostInfo mongosHostInfo = propertyFileHandler.getMongoSHostInfo();
+			HostInfo mongosHostInfo = propertyFileHandler.getMongoRouterHostInfo();
 			mongoS = new Mongo(mongosHostInfo.getHost(), mongosHostInfo.getPort());
 			shardMongo = new Mongo(Constants.MONGO_LOCAL_HOST, 10000);
 		} catch (Exception e) {
