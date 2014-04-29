@@ -24,6 +24,7 @@ public interface Constants {
 	public static final String MONGO_ENABLE_SHARDING = "enablesharding";
 	public static final String MONGO_SHARD_COLLECTION = "shardcollection";
 	public static final String MONGO_RDF_DB = "rdfdb";
+	public static final String MONGO_STATS_COLLECTION = "stats";
 	public static final String MONGO_ADMIN_DB = "admin";
 	
 	public static final String TOTAL_VERTICES = "total_vertices";
@@ -69,6 +70,7 @@ public interface Constants {
 	public static final String FIELD_TYPE_SEQID = "tseqid";
 	
 	public static final String FIELD_PRED_SELECTIVITY = "count";
+	public static final String TOTAL_DOCS = "total";
 	
 	public static final String TRIPLE_TERM_DELIMITER = "|";	
 	public static final String REGEX_DELIMITER = "\\|";
