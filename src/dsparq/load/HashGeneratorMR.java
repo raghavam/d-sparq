@@ -10,6 +10,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
@@ -88,11 +89,11 @@ public class HashGeneratorMR extends Configured implements Tool {
 	}
 	
 	private static class Reduce extends MapReduceBase implements
-	Reducer<Text, LongWritable, Text, Text> {
+	Reducer<Text, LongWritable, Text, NullWritable> {
 		
 		@Override
 		public void reduce(Text key, Iterator<LongWritable> values,
-				OutputCollector<Text, Text> output, 
+				OutputCollector<Text, NullWritable> output, 
 				Reporter reporter) {
 			try {
 				String keyStr = key.toString();
@@ -105,8 +106,10 @@ public class HashGeneratorMR extends Configured implements Tool {
 					}
 				}
 				StringBuilder sb = new StringBuilder().append(digestValue).
-						append(Constants.TRIPLE_TERM_DELIMITER).append(typeID);
-				output.collect(new Text(sb.toString()), key);
+						append(Constants.TRIPLE_TERM_DELIMITER).
+						append(typeID).
+						append(Constants.TRIPLE_TERM_DELIMITER).append(keyStr);
+				output.collect(new Text(sb.toString()), null);
 /*				
 				BasicBSONObject doc = new BasicBSONObject();
 				doc.put(Constants.FIELD_HASH_VALUE, digestValue);
@@ -157,7 +160,7 @@ public class HashGeneratorMR extends Configured implements Tool {
 		jobConf.setOutputFormat(TextOutputFormat.class);	
 		
 		jobConf.setOutputKeyClass(Text.class);
-		jobConf.setOutputValueClass(Text.class);
+		jobConf.setOutputValueClass(NullWritable.class);
 		
 		FileInputFormat.setInputPaths(jobConf, new Path(triples));
 		FileOutputFormat.setOutputPath(jobConf, outputPath);
