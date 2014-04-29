@@ -60,7 +60,7 @@ public interface Constants {
 	public static final String FIELD_ID = "id";
 	public static final String FIELD_STR_VALUE = "sval";
 	public static final String FIELD_WID = "wid";
-	
+	public static final String FIELD_TYPEID = "tid";	
 	public static final String FIELD_VERTEX_ID = "vertexID";
 	public static final String FIELD_PARTITION_ID = "partitionID";
 	
