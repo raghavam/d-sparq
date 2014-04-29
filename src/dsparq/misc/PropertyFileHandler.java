@@ -77,7 +77,8 @@ public class PropertyFileHandler {
 	}
 	
 	public int getShardCount() {
-		return Integer.parseInt(shardInfoProperties.getProperty("shard.count"));
+		String shards = shardInfoProperties.getProperty("shards");
+		return shards.split(",").length;
 	}
 	
 	public HostInfo getMongoSHostInfo() {
