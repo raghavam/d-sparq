@@ -44,15 +44,19 @@ public class PropertyFileHandler {
 	
 	public List<HostInfo> getAllShardsInfo() {
 		List<HostInfo> hostList = new ArrayList<HostInfo>();
-		String shardsStr = shardInfoProperties.getProperty("shards");
+		String shardsStr = shardInfoProperties.getProperty("shards.host");
 		String[] shards = shardsStr.split(",");
-		for(String shard : shards) {
-			String[] hostPort = shard.split(":");
-			HostInfo hostInfo = new HostInfo(hostPort[0], 
-					Integer.parseInt(hostPort[1]));
+		int port = getShardPort();
+		for(String shardHost : shards) {
+			HostInfo hostInfo = new HostInfo(shardHost, port);
 			hostList.add(hostInfo);
 		}		
 		return hostList;
+	}
+	
+	public int getShardPort() {
+		return Integer.parseInt(
+				shardInfoProperties.getProperty("shards.port").trim());
 	}
 	
 	//using only one mongos (router) for now
@@ -73,9 +77,9 @@ public class PropertyFileHandler {
 		return shardInfoProperties.getProperty("mongo.router");
 	}
 	
-	public int getMongosCount() {
-		return Integer.parseInt(shardInfoProperties.getProperty("mongos.count"));
-	}
+//	public int getMongosCount() {
+//		return Integer.parseInt(shardInfoProperties.getProperty("mongos.count"));
+//	}
 	
 	public int getShardCount() {
 		String shards = shardInfoProperties.getProperty("shards");
