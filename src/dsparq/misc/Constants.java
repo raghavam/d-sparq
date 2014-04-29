@@ -81,7 +81,7 @@ public interface Constants {
 	
 	public static final String MONGO_UNIQUE_INDEX = "unique";
 	
-	public final int QUEUE_CAPACITY = 12000;
+	public final int CONTAINER_CAPACITY = 12000;
 	
 	// used while creating a Jedis instance
 	public final int INFINITE_TIMEOUT = 60*60*60*60*60*1000;

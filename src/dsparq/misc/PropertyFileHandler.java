@@ -81,8 +81,9 @@ public class PropertyFileHandler {
 		return shards.split(",").length;
 	}
 	
-	public HostInfo getMongoSHostInfo() {
-		String[] mongosHostPort = shardInfoProperties.getProperty("mongos").
+	public HostInfo getMongoRouterHostInfo() {
+		String[] mongosHostPort = 
+				shardInfoProperties.getProperty("mongo.router").
 										trim().split(":");
 		HostInfo hostInfo = new HostInfo(mongosHostPort[0], 
 				Integer.parseInt(mongosHostPort[1]));	

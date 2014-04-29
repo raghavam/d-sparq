@@ -297,7 +297,7 @@ public class IDLoader2 extends Configured implements Tool {
 		idLoader.initializeShards();
 		// read property file here and just pass the necessary values
 		PropertyFileHandler propHandler = PropertyFileHandler.getInstance();
-		HostInfo mongoSHostInfo = propHandler.getMongoSHostInfo();
+		HostInfo mongoSHostInfo = propHandler.getMongoRouterHostInfo();
 		String[] extraArgs = new String[args.length + 1];
 		for(int i=0; i<args.length; i++)
 			extraArgs[i] = args[i];
@@ -310,7 +310,7 @@ public class IDLoader2 extends Configured implements Tool {
 		PropertyFileHandler propertyFileHandler = 
 						PropertyFileHandler.getInstance();
 		
-		HostInfo mongoSHostPort = propertyFileHandler.getMongoSHostInfo();
+		HostInfo mongoSHostPort = propertyFileHandler.getMongoRouterHostInfo();
 //		HostInfo mongoSHostPort = new HostInfo("ip-10-50-73-199.eu-west-1.compute.internal", 27017);
 		Mongo mongo = new Mongo(mongoSHostPort.getHost(), mongoSHostPort.getPort());
 /*		

@@ -51,7 +51,7 @@ public class PartitionTripleInserter {
 			HostInfo hostInfo = shardsHostInfo.get(i);
 			mongoShards.add(i, new Mongo(hostInfo.getHost(), hostInfo.getPort()));
 		}
-		HostInfo mongoSHostInfo = propertyFileHandler.getMongoSHostInfo();
+		HostInfo mongoSHostInfo = propertyFileHandler.getMongoRouterHostInfo();
 		Mongo mongoS = new Mongo(mongoSHostInfo.getHost(), mongoSHostInfo.getPort());
 		List<DBCollection> partitionedTripleCollections = 
 			new ArrayList<DBCollection>(numPartitions);

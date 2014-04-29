@@ -28,7 +28,7 @@ public class IDGenerator {
 		PropertyFileHandler propertyFileHandler = 
 					PropertyFileHandler.getInstance();
 
-		HostInfo mongosInfo = propertyFileHandler.getMongoSHostInfo();
+		HostInfo mongosInfo = propertyFileHandler.getMongoRouterHostInfo();
 		Mongo mongo = new Mongo(mongosInfo.getHost(), mongosInfo.getPort());
 		DB rdfDB = mongo.getDB(Constants.MONGO_RDF_DB);
 		DBCollection idValCollection = rdfDB.getCollection(

@@ -34,7 +34,7 @@ public class IDUnwrapper {
 		
 		PropertyFileHandler propertyFileHandler = 
 								PropertyFileHandler.getInstance();
-		HostInfo mongosHostInfo = propertyFileHandler.getMongoSHostInfo();
+		HostInfo mongosHostInfo = propertyFileHandler.getMongoRouterHostInfo();
 		Mongo mongo = new Mongo(mongosHostInfo.getHost(), 
 							mongosHostInfo.getPort());
 		DB rdfDB = mongo.getDB(Constants.MONGO_RDF_DB);

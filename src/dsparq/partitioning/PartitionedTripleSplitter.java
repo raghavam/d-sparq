@@ -224,7 +224,7 @@ public class PartitionedTripleSplitter extends Configured implements Tool {
 					shardsInfo.get(i).toString());
 		}
 		
-		HostInfo mongosHostPort = propertyFileHandler.getMongoSHostInfo();
+		HostInfo mongosHostPort = propertyFileHandler.getMongoRouterHostInfo();
 		jobConf.set("MongosInfo", mongosHostPort.toString());
 		
 		Path pOutput = new Path(outputDir + "");
