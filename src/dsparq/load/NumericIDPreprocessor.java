@@ -17,7 +17,8 @@ import dsparq.misc.PropertyFileHandler;
  * Purpose of this class is to go through the IDVal collection
  * in each shard and figure out the total number of IDs present.
  * This information is later used to assign numerical IDs to each
- * term (subject/predicate/object).
+ * term (subject/predicate/object). Numerical IDs are required for
+ * Metis (vertex IDs) and serves no other purpose.
  * 
  * @author Raghava
  */
@@ -27,6 +28,7 @@ public class NumericIDPreprocessor {
 		PropertyFileHandler propertyFileHandler = 
 				PropertyFileHandler.getInstance();
 		List<HostInfo> shardsInfo = propertyFileHandler.getAllShardsInfo();
+		long prevCount = 0;
 		try {
 			for(HostInfo hostInfo : shardsInfo) {
 				Mongo mongoShard = new MongoClient(hostInfo.getHost(), 
@@ -36,11 +38,16 @@ public class NumericIDPreprocessor {
 						Constants.MONGO_IDVAL_COLLECTION);
 				DBCollection statsCollection = db.getCollection(
 						Constants.MONGO_STATS_COLLECTION);
-				long totalDocs = idValCollection.count();
+				//in the next shard counting starts from the point where
+				//count in previous shard ends.
+				prevCount++;	
 				BasicDBObject doc = new BasicDBObject();
-				doc.put(Constants.TOTAL_DOCS, totalDocs);
+				doc.put(Constants.TOTAL_DOCS, prevCount);
 				statsCollection.insert(doc);
 				mongoShard.close();
+				
+				long totalDocs = idValCollection.count();
+				prevCount = totalDocs;
 			}
 		}catch(Exception e) {
 			e.printStackTrace();
