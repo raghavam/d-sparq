@@ -25,7 +25,7 @@ Add the executables to PATH environment variable.
 **Note** that if the underlying machine architecture is **NUMA**, then follow the instructions at 
 http://docs.mongodb.org/manual/administration/production-notes/#mongodb-and-numa-hardware for starting
 MongoDB. Instructions are replicated here for convenience.
-	a. Check whether the file ```zone_reclaim_mode``` at ```/proc/sys/vm/zone_reclaim_mode``` has content
+  a. Check whether the file ```zone_reclaim_mode``` at ```/proc/sys/vm/zone_reclaim_mode``` has content
 	as 0. If not use the following ```echo 0 > /proc/sys/vm/zone_reclaim_mode```.
 	b. Use ```numactl``` while starting MongoDB. ```numactl --interleave=all bin/mongod <mongo_params>```.
 The steps to setup 
