@@ -21,7 +21,7 @@ import dsparq.util.Util;
 
 /**
  * Takes a set of files where each line is of the form
- * HashDigest|TypeID StringValue where
+ * HashDigest|TypeID|StringValue where
  * HashDigest is the hash of subject/predicate/object. TypeID is
  * -1 for object that follows rdf:type predicate. It is 1 for 
  * everything else. -1 is required for Metis (after removing "type" triples).
