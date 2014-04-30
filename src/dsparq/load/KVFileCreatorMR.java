@@ -10,6 +10,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
@@ -25,8 +27,16 @@ import org.apache.hadoop.mapred.RunningJob;
 import org.apache.hadoop.mapred.TextOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
+import org.semanticweb.yars.nx.Literal;
 import org.semanticweb.yars.nx.Node;
 import org.semanticweb.yars.nx.parser.NxParser;
+
+import com.mongodb.BasicDBObject;
+import com.mongodb.DB;
+import com.mongodb.DBCollection;
+import com.mongodb.DBObject;
+import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
 
 import redis.clients.jedis.JedisShardInfo;
 import redis.clients.jedis.ShardedJedis;
@@ -58,38 +68,53 @@ public class KVFileCreatorMR extends Configured implements Tool {
 			StringReader reader = new StringReader(key.toString());
 			NxParser nxParser = new NxParser(reader);
 			Node[] nodes = nxParser.next();		
+			
+			String object = null;
+			if(nodes[2] instanceof Literal) {
+				//make this in the same form as Jena sees it.
+				//Eg: "Journal 1 (1940)"^^http://www.w3.org/2001/XMLSchema#string
+				Literal literal = (Literal) nodes[2];
+				StringBuilder sb = new StringBuilder();
+				sb.append("\"").append(literal.getData()).append("\"");
+				sb.append("^^").append(literal.getDatatype().toString());
+				object = sb.toString();
+			}
+			else
+				object = nodes[Constants.POSITION_OBJECT].toString();
 			output.collect(new Text(nodes[Constants.POSITION_SUBJECT].toString()), 
 					new Text(nodes[Constants.POSITION_PREDICATE].toString() +
-					         Constants.TRIPLE_TERM_DELIMITER + 
-					         nodes[Constants.POSITION_OBJECT].toString()));
+					         Constants.TRIPLE_TERM_DELIMITER + object));
+			
 			reader.close();
 		}
 	}
 	
 	private static class Reduce extends MapReduceBase implements 
-	Reducer<Text, Text, Text, Text> {
+	Reducer<Text, Text, Text, NullWritable> {
 		
-		private ShardedJedis shardedJedis; 
+		private Mongo mongo; 
+		private DBCollection idValCollection;
 		private LRUCache<String, String> dictionary;
 		
 		@Override
 		public void configure(JobConf conf) {
-			String redisHosts = conf.get("RedisHosts");
-			String[] hostPorts = redisHosts.split(",");
-			List<JedisShardInfo> shards = 
-				new ArrayList<JedisShardInfo>(hostPorts.length);
-			for(String hostPort : hostPorts) {
-				String[] hp = hostPort.split(":");
-				shards.add(new JedisShardInfo(hp[0], Integer.parseInt(hp[1]), 
-						Constants.INFINITE_TIMEOUT));
-			}
-			shardedJedis = new ShardedJedis(shards, Hashing.MURMUR_HASH);
 			dictionary = new LRUCache<String, String>(100000);
+			String mongoRouter = conf.get("mongo.router");
+			String[] hostPort = mongoRouter.split(":");
+			try {
+				mongo = new MongoClient(hostPort[0], 
+						Integer.parseInt(hostPort[1]));
+				DB db = mongo.getDB(Constants.MONGO_RDF_DB);
+				idValCollection = db.getCollection(
+						Constants.MONGO_IDVAL_COLLECTION);
+			}catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 		
 		@Override
 		public void reduce(Text key, Iterator<Text> values,
-				OutputCollector<Text, Text> output, Reporter reporter)
+				OutputCollector<Text, NullWritable> output, Reporter reporter)
 				throws IOException {
 			try {
 				String subDigest = Util.generateMessageDigest(key.toString());
@@ -97,7 +122,7 @@ public class KVFileCreatorMR extends Configured implements Tool {
 				if(dictionary.containsKey(subDigest))
 					subID = dictionary.get(subDigest);
 				else {
-					subID = shardedJedis.get(subDigest);
+					subID = getFromDB(subDigest, key.toString());
 					dictionary.put(subDigest, subID);
 				}
 				if(subID == null)
@@ -110,7 +135,7 @@ public class KVFileCreatorMR extends Configured implements Tool {
 					if(dictionary.containsKey(predDigest))
 						predID = dictionary.get(predDigest);
 					else {
-						predID = shardedJedis.get(predDigest);
+						predID = getFromDB(predDigest, predObj[0]);
 						dictionary.put(predDigest, predID);
 					}
 					if(predID == null)
@@ -120,13 +145,13 @@ public class KVFileCreatorMR extends Configured implements Tool {
 					if(dictionary.containsKey(objDigest))
 						objID = dictionary.get(objDigest);
 					else {
-						objID = shardedJedis.get(objDigest);
+						objID = getFromDB(objDigest, predObj[1]);
 						dictionary.put(objDigest, objID);
 					}
 					if(objID == null)
 						throw new Exception("objID is null: " + predObj[1]);
 					output.collect(new Text(subID + Constants.TRIPLE_TERM_DELIMITER + 
-							predID + Constants.TRIPLE_TERM_DELIMITER + objID), new Text(""));
+							predID + Constants.TRIPLE_TERM_DELIMITER + objID), null);
 				}
 			}
 			catch(Exception e) {
@@ -136,8 +161,23 @@ public class KVFileCreatorMR extends Configured implements Tool {
 		
 		@Override
 		public void close() throws IOException {
-			shardedJedis.disconnect();
+			mongo.close();
 			dictionary.clear();
+		}
+		
+		private String getFromDB(String digestValue, String term) throws Exception {
+			BasicDBObject queryDoc = new BasicDBObject();
+			queryDoc.put(Constants.FIELD_HASH_VALUE, digestValue);
+			BasicDBObject projectionDoc = new BasicDBObject();
+			projectionDoc.put(Constants.FIELD_NUMID, 1);
+			DBObject resultDoc = idValCollection.findOne(queryDoc, 
+					projectionDoc);
+			if(resultDoc == null)
+				throw new Exception("ID not present: " + digestValue + "  " + term);
+			Object numID = resultDoc.get(Constants.FIELD_NUMID);
+			if(numID == null)
+				throw new Exception("numID is null for " + digestValue);
+			return numID.toString();
 		}
 	}
 	
@@ -160,8 +200,7 @@ public class KVFileCreatorMR extends Configured implements Tool {
 		
 		if(propertyFileHandler == null)
 			System.out.println("prop file handler is null");
-		System.out.println("Hosts: " + propertyFileHandler.getRedisHosts());
-		jobConf.set("RedisHosts", propertyFileHandler.getRedisHosts());
+		jobConf.set("mongo.router", propertyFileHandler.getMongoRouter());
 		FileInputFormat.setInputPaths(jobConf, new Path(triples));
 		FileOutputFormat.setOutputPath(jobConf, outputPath);
 		jobConf.setMapperClass(Map.class);
@@ -171,11 +210,11 @@ public class KVFileCreatorMR extends Configured implements Tool {
 		jobConf.setInputFormat(KeyValueTextInputFormat.class);
 		jobConf.setOutputFormat(TextOutputFormat.class);			
 		jobConf.setOutputKeyClass(Text.class);
-		jobConf.setOutputValueClass(Text.class);
+		jobConf.setOutputValueClass(NullWritable.class);
 		
-		int numReduceTasks = (int)(0.95 * Integer.parseInt(jobConf.get(
-				"mapred.tasktracker.reduce.tasks.maximum")) * 14);
-		jobConf.setNumReduceTasks(numReduceTasks);
+		int numNodes = propertyFileHandler.getShardCount();
+		int numReducers = (int)Math.ceil(0.95 * numNodes * 2);
+		jobConf.setNumReduceTasks(numReducers);
 		RunningJob job = JobClient.runJob(jobConf);
 		if(!job.isSuccessful()) {
 			System.out.println("FAILED!!!");
@@ -192,6 +231,6 @@ public class KVFileCreatorMR extends Configured implements Tool {
 					"2) Output path";
 			throw new Exception(msg);
 		}
-		ToolRunner.run(new Configuration(), new KVFileCreatorMR(), args);
+		ToolRunner.run(new KVFileCreatorMR(), args);
 	}
 }
