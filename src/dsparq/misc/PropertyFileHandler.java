@@ -82,7 +82,7 @@ public class PropertyFileHandler {
 //	}
 	
 	public int getShardCount() {
-		String shards = shardInfoProperties.getProperty("shards");
+		String shards = shardInfoProperties.getProperty("shards.host");
 		return shards.split(",").length;
 	}
 	
