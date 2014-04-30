@@ -61,7 +61,25 @@ number of nodes in the cluster.
 
 ##### Load the triples into respective partitions
 
-1. 
+1. The output of Metis specifies the vertices which belong to a particular partition. From that, we 
+need to get the triples associated with those vertices. Following steps are required to get all the
+triples which should go into a particular partition.
+2. Combine VertexID file and partitionID file. Use ```ant partition-format -Dvid=vertex-r-00000 -Dpid=adjvertex-r-00000.part.<num>```.
+3. Based on the vertexID - partitionID pairs, create separate files for each partition which contain 
+all vertices belonging to that partition. Use ```hadoop jar dist/d-sparq.jar dsparq.partitioning.TripleSplitter <input_dir> <output_dir>```.
+Input directory contains the combined vertexID - partitionID pairs.
+4. For the triples on vertex partitions, use n-hop duplication.
+5. Based on the output of above step, get the triples associated with each partition. Use ```hadoop jar dist/d-sparq.jar dsparq.partitioning.PartitionedTripleSeparator <input_dir> <output_dir>```.
+6. Copy the triple files which belong to a particular partition on to that partition. 
+7. Load the triples into local MongoDB and as well as into RDF-3X on each partition. Use ```java -Xms12g -Xmx12g -cp dist/d-sparq.jar dsparq.load.PartitionedTripleLoader <input_triple_file>```.
+Indexes are also created in this step (PartitionedTripleLoader does that). For loading to RDF-3X, use
+```time bin/rdf3xload rdfdb <file>```.
+
+##### Run the queries
+
+1. Run this on each node of the cluster. Use ```java -Xms12g -Xmx12g -cp dist/d-sparq.jar dsparq.query.opt.ThreadedQueryExecutor2 <query_file> <number_of_times_to_run>```.
+The input query file should contain only one query. Query should be written without using any line breaks.
+2. For running queries in RDF-3X, use ```time bin/rdf3xquery rdfdb <query_file>```.
 
 
 
