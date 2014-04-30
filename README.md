@@ -34,12 +34,11 @@ The steps to set up sharded cluster are given here for convenience. For the foll
   2. Start the mongos instances. One instance of this is minimally sufficient. Use ```numactl --interleave=all bin/mongos --configdb <config_server_host>:20000 > logs/mongos.log &```.
   3. Start the shards in the cluster. Do this on all the nodes in the cluster. Use ```numactl --interleave=all bin/mongod --shardsvr --dbpath db/rdfdb --port 10000 > logs/shard.log &```.
   4. Add shards to the cluster. Using mongo shell and connect to mongos instance. At the prompt run the
-  following commands: a) use admin b) db.runCommand( { addshard : "<shard_host>:<shard_port>" } ); Run
+  following commands: a) ```use admin``` b) ```db.runCommand( { addshard : "<shard_host>:<shard_port>" } );``` Run
   this for all shards i.e., put in the information for all the shards. c) Enable sharding for the 
   database (rdfdb) as well as the collection (idvals) to be sharded. Use the commands, 
-  db.runCommand( { enablesharding : "rdfdb" } ); and 
-  db.runCommand( { shardcollection : "rdfdb.idvals", key : { _id : 1 }, unique : true });
-   
+  ```db.runCommand( { enablesharding : "rdfdb" } );``` and 
+  ```db.runCommand( { shardcollection : "rdfdb.idvals", key : { _id : 1 }, unique : true });```
 3. In ShardInfo.properties, make the necessary changes i.e., put the information regarding cluster and MongoDB.
 4. The input triples should be in N-Triples format. If not, RDF2RDF (http://www.l3s.de/~minack/rdf2rdf) 
 can be used to convert the triples into N-Triples format.
