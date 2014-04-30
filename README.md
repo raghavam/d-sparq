@@ -11,6 +11,8 @@ Following software are required in order to run d-sparq.
 2. Java 1.6 or later (http://www.oracle.com/technetwork/java/index.html)
 3. Hadoop 1.0.3 (http://hadoop.apache.org)
 4. ant (http://ant.apache.org)
+5. Metis (http://glaros.dtc.umn.edu/gkhome/metis/metis/download). If a distributed graph partitioner can
+be used then it is better. But right now, did not find any freely available distributed graph partitioner.
 
 Please download and install all of them. MongoDB needs to be installed on all the machines in the cluster that you plan to make use of. 
 Add the executables to PATH environment variable.
@@ -48,7 +50,16 @@ Input directory is the one containing original triple files.
 1. Use ```hadoop jar dist/d-sparq.jar dsparq.partitioning.GetTypeTriples <input_dir> <output_dir>```. 
 Ignore this step if there is only 1 node in the cluster.
 
-##### Generate input files for Metis
+##### Generate input file for Metis
+
+1. Metis needs the graph to be in the form of an adjacency list. So generate it using ```hadoop jar dist/d-sparq.jar dsparq.partitioning.UndirectedGraphPartitioner <input_dir> <output_dir>```.
+Copy the output to local file system.
+2. Total number of vertices and edges should also be specified. Get them using ```java -Xms12g -Xmx12g -cp dist/d-sparq.jar dsparq.partitioning.format.GraphStats adjvertex-r-00000-new```.
+3. Add the total number of vertices and edges to the METIS input file (adjvertex-...) as its first line.
+4. Run Metis using ```gpmetis <adjvertex_file> <num_partitions>```. Number of partitions is same as
+number of nodes in the cluster.
+
+##### Load the triples into respective partitions
 
 1. 
 
