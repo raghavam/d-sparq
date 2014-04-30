@@ -21,7 +21,10 @@ Add the executables to PATH environment variable.
 ## Instructions 
 
 1. Download the source code and compile using ```ant jar```.
-2. Start a **MongoDB sharded cluster**. Instructions are given at http://docs.mongodb.org/manual/tutorial/deploy-shard-cluster.  
+
+##### Start MongoDB Sharded Cluster
+
+1. Instructions are given at http://docs.mongodb.org/manual/tutorial/deploy-shard-cluster.  
 Note that if the underlying machine architecture is **NUMA**, then follow the instructions at 
 http://docs.mongodb.org/manual/administration/production-notes/#mongodb-and-numa-hardware for starting
 MongoDB. Instructions are given here for convenience.
@@ -39,8 +42,11 @@ The steps to set up sharded cluster are given here for convenience. For the foll
   database (rdfdb) as well as the collection (idvals) to be sharded. Use the commands, 
   ```db.runCommand( { enablesharding : "rdfdb" } );``` and 
   ```db.runCommand( { shardcollection : "rdfdb.idvals", key : { _id : 1 }, unique : true });```
-3. In ShardInfo.properties, make the necessary changes i.e., put the information regarding cluster and MongoDB.
-4. The input triples should be in N-Triples format. If not, RDF2RDF (http://www.l3s.de/~minack/rdf2rdf) 
+  
+##### Configure d-sparq and format input  
+  
+1. In ShardInfo.properties, make the necessary changes i.e., put the information regarding MongoDB cluster.
+2. The input triples should be in N-Triples format. If not, RDF2RDF (http://www.l3s.de/~minack/rdf2rdf) 
 can be used to convert the triples into N-Triples format.
 
 ##### Encoding Triples
