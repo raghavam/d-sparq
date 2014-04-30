@@ -44,10 +44,9 @@ public class NumericIDPreprocessor {
 				BasicDBObject doc = new BasicDBObject();
 				doc.put(Constants.TOTAL_DOCS, prevCount);
 				statsCollection.insert(doc);
-				mongoShard.close();
-				
-				long totalDocs = idValCollection.count();
+				long totalDocs = idValCollection.count();				
 				prevCount = totalDocs;
+				mongoShard.close();
 			}
 		}catch(Exception e) {
 			e.printStackTrace();
