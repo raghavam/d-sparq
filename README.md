@@ -21,7 +21,14 @@ Add the executables to PATH environment variable.
 ## Instructions 
 
 1. Download the source code and compile using the command, ```ant jar```.
-2. Start a MongoDB sharded cluster (http://docs.mongodb.org/manual/tutorial/deploy-shard-cluster).
+2. Start a MongoDB sharded cluster (http://docs.mongodb.org/manual/tutorial/deploy-shard-cluster). 
+**Note** that if the underlying machine architecture is **NUMA**, then follow the instructions at 
+http://docs.mongodb.org/manual/administration/production-notes/#mongodb-and-numa-hardware for starting
+MongoDB. Instructions are replicated here for convenience.
+	a. Check whether the file ```zone_reclaim_mode``` at ```/proc/sys/vm/zone_reclaim_mode``` has content
+	as 0. If not use the following ```echo 0 > /proc/sys/vm/zone_reclaim_mode```.
+	b. Use ```numactl``` while starting MongoDB. ```numactl --interleave=all bin/mongod <mongo_params>```.
+The steps to setup 
 3. Make rdfdb as a sharded database and idvals and a sharded collection. Instructions on how to do this
 are sharded cluster docs of MongoDB. 
 4. In ShardInfo.properties, make the necessary changes i.e., put the information regarding cluster and MongoDB.
