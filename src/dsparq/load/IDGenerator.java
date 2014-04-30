@@ -1,29 +1,15 @@
 package dsparq.load;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.net.InetAddress;
-import java.util.ArrayList;
 import java.util.GregorianCalendar;
-import java.util.List;
 
-import org.openjena.riot.RiotReader;
-import org.openjena.riot.lang.LangNTriples;
-
-import com.hp.hpl.jena.graph.Triple;
 import com.mongodb.BasicDBObject;
 import com.mongodb.CommandResult;
 import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
 import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
-import com.mongodb.MongoException;
-import com.mongodb.WriteConcern;
 
 import dsparq.misc.Constants;
-import dsparq.misc.HostInfo;
 import dsparq.misc.PropertyFileHandler;
 import dsparq.util.Util;
 
@@ -54,7 +40,7 @@ public class IDGenerator {
 					"var statsCollection = db.getCollection('" + 
 						Constants.MONGO_STATS_COLLECTION + "'); " +
 					"var statsDoc = statsCollection.findOne(); " + //there is only 1 document
-					"var startNum = Number(statsDoc['" + 
+					"var startNum = parseInt(statsDoc['" + 
 						Constants.TOTAL_DOCS + "']); " +
 					"var idValsCollection = db.getCollection('" + 
 						Constants.MONGO_IDVAL_COLLECTION + "'); " +
@@ -63,7 +49,7 @@ public class IDGenerator {
 						Constants.FIELD_TYPEID + ":1}); " +
 					"while(cursor.hasNext()) { " +
 						"var doc = cursor.next(); " +
-						"var tid = Number(doc['" + Constants.FIELD_TYPEID + "']); " +
+						"var tid = parseInt(doc['" + Constants.FIELD_TYPEID + "']); " +
 						"if(tid == 1) { " +
 							"idValsCollection.update({" + 
 								Constants.FIELD_HASH_VALUE + ": doc['" + 
