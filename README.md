@@ -42,3 +42,15 @@ Run this on each shard of the cluster. Running it simultaneously on all the shar
 4. Generate triple file(s) with numerical IDs. After this step, triples file in the form of 
 SubjectID|PredicateID|ObjectID would be generated. Use ```hadoop jar dist/d-sparq.jar dsparq.load.KVFileCreatorMR <input_dir> <output_dir>```.
 Input directory is the one containing original triple files.
+
+##### Separate rdf:type triples
+
+1. Use ```hadoop jar dist/d-sparq.jar dsparq.partitioning.GetTypeTriples <input_dir> <output_dir>```. 
+Ignore this step if there is only 1 node in the cluster.
+
+##### Generate input files for Metis
+
+1. 
+
+
+
