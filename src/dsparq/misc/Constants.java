@@ -24,7 +24,7 @@ public interface Constants {
 	public static final String MONGO_ENABLE_SHARDING = "enablesharding";
 	public static final String MONGO_SHARD_COLLECTION = "shardcollection";
 	public static final String MONGO_RDF_DB = "rdfdb";
-	public static final String MONGO_STATS_COLLECTION = "stats";
+	public static final String MONGO_STATS_COLLECTION = "idstats";
 	public static final String MONGO_ADMIN_DB = "admin";
 	
 	public static final String TOTAL_VERTICES = "total_vertices";
@@ -62,6 +62,7 @@ public interface Constants {
 	public static final String FIELD_STR_VALUE = "sval";
 	public static final String FIELD_WID = "wid";
 	public static final String FIELD_TYPEID = "tid";	
+	public static final String FIELD_NUMID = "numid";
 	public static final String FIELD_VERTEX_ID = "vertexID";
 	public static final String FIELD_PARTITION_ID = "partitionID";
 	
