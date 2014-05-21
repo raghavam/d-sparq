@@ -59,10 +59,12 @@ the directory containing the triples.
 previous step from HDFS to local file system or to the one hosting Mongo router. Use 
 ```java -Xms12g -Xmx12g -cp dist/d-sparq.jar dsparq.load.HashDigestLoader <input_dir>```. Input 
 directory is the one containing the output of previous step.
-3. Generate numerical IDs for the digest mesages generated in the previous step. The numerical IDs 
+3. A count of total documents on each shard is required for the next step. 
+Use ```java -Xms12g -Xmx12g -cp dist/d-sparq.jar dsparq.load.NumericIDPreprocessor```.
+4. Generate numerical IDs for the digest messages generated in the previous step. The numerical IDs 
 are required for Metis (vertex IDs). Use ```java -Xms12g -Xmx12g -cp dist/d-sparq.jar dsparq.load.IDGenerator```.
 Run this on each shard of the cluster. Running it simultaneously on all the shards would save time.
-4. Generate triple file(s) with numerical IDs. After this step, triples file in the form of 
+5. Generate triple file(s) with numerical IDs. After this step, triples file in the form of 
 SubjectID|PredicateID|ObjectID would be generated. Use ```hadoop jar dist/d-sparq.jar dsparq.load.KVFileCreatorMR <input_dir> <output_dir>```.
 Input directory is the one containing original triple files.
 
