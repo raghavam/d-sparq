@@ -8,7 +8,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
@@ -37,7 +36,10 @@ import dsparq.util.Util;
 
 /**
  * This class generates SHA-1 for each part of the 
- * triple (subject/predicate/object) and inserts into DB.
+ * triple (subject/predicate/object) and writes the output 
+ * to a file in the form: HashDigest|TypeID|String 
+ * where TypeID is -1 for objects whose predicate is rdf:type
+ * and 1 otherwise. String is the string value of sub/pred/obj.
  * 
  * @author Raghava
  *
