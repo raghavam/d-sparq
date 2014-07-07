@@ -8,16 +8,20 @@ import java.util.List;
 import java.util.Scanner;
 
 import com.mongodb.BasicDBObject;
+import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
 
 import dsparq.misc.Constants;
+import dsparq.misc.PropertyFileHandler;
 
 /**
  * This class takes a set of files containing triples in
- * sub|pred|obj|bool format and loads them to the local DB
+ * sub|pred|obj format and loads them to the local DB in 
+ * star schema.
  * 
  * @author Raghava
  *
@@ -27,12 +31,21 @@ public class SplitTripleLoader {
 	public void loadTriples(String dirPath) throws Exception {
 		File inputDir = new File(dirPath);
 		File[] allFiles = inputDir.listFiles();
-		Mongo mongo = new Mongo("localhost", 10000);
+		PropertyFileHandler propertyFileHandler = 
+				PropertyFileHandler.getInstance();
+		Mongo mongo = new MongoClient("localhost", 
+				propertyFileHandler.getShardPort());
 		DB rdfDB = mongo.getDB(Constants.MONGO_RDF_DB);
-		DBCollection ptripleCollection = rdfDB.getCollection(
-								Constants.MONGO_PARTITIONED_VERTEX_COLLECTION);
-		long lineCount = 0;
-		List<DBObject> docList = new ArrayList<DBObject>();
+		DBCollection starSchemaCollection = rdfDB.getCollection(
+				Constants.MONGO_STAR_SCHEMA);
+		//deleting the existing schema
+		starSchemaCollection.drop();
+		List<DBObject> docsToInsert = new ArrayList<DBObject>();
+		long previousSubjectID = -1;
+		long subjectID = -1;
+		boolean firstLine = true;
+		List<BasicDBObject> predObjList = new ArrayList<BasicDBObject>();
+		long startTime = System.nanoTime();
 		for(File tripleFile : allFiles) {
 			BufferedInputStream inputStream = new BufferedInputStream(
 					new FileInputStream(tripleFile));
@@ -40,32 +53,56 @@ public class SplitTripleLoader {
 			while(scanner.hasNext()) {
 				String triple = scanner.nextLine();
 				String[] tokens = triple.trim().split(Constants.REGEX_DELIMITER);
-				BasicDBObject tripleDoc = new BasicDBObject();
-				tripleDoc.put(Constants.FIELD_TRIPLE_SUBJECT, 
-								Long.parseLong(tokens[Constants.POSITION_SUBJECT]));
-				tripleDoc.put(Constants.FIELD_TRIPLE_PREDICATE, 
+				subjectID = Long.parseLong(
+						tokens[Constants.POSITION_SUBJECT]);
+				if(firstLine) {
+					firstLine = false;
+					previousSubjectID = subjectID;
+				}
+				else {
+					if(subjectID != previousSubjectID) {
+						DBObject doc = new BasicDBObject();
+						doc.put(Constants.FIELD_TRIPLE_SUBJECT, previousSubjectID);
+						doc.put(Constants.FIELD_TRIPLE_PRED_OBJ, predObjList);
+						docsToInsert.add(doc);
+						previousSubjectID = subjectID;
+						predObjList = new ArrayList<BasicDBObject>();
+					}
+				}
+				BasicDBObject predObj = new BasicDBObject();
+				predObj.put(Constants.FIELD_TRIPLE_PREDICATE, 
 						Long.parseLong(tokens[Constants.POSITION_PREDICATE]));
-				tripleDoc.put(Constants.FIELD_TRIPLE_OBJECT, 
+				predObj.put(Constants.FIELD_TRIPLE_OBJECT, 
 						Long.parseLong(tokens[Constants.POSITION_OBJECT]));
-				docList.add(tripleDoc);
-				lineCount++;
-				if(lineCount == 10000) {
-					System.out.println("Done with 10000");
+				predObjList.add(predObj);
+
+				if(docsToInsert.size() >= 10000) {
 					// this is the bulk insert in MongoDB java
-					ptripleCollection.insert(docList);
-					lineCount = 0;
-					docList.clear();
+					starSchemaCollection.insert(docsToInsert);
+					docsToInsert.clear();
 				}
 			}
-			if(!docList.isEmpty()) {
-				ptripleCollection.insert(docList);
-				lineCount = 0;
-				docList.clear();
-			}
+			DBObject doc = new BasicDBObject();
+			doc.put(Constants.FIELD_TRIPLE_SUBJECT, subjectID);
+			doc.put(Constants.FIELD_TRIPLE_PRED_OBJ, predObjList);
+			docsToInsert.add(doc);
+			starSchemaCollection.insert(docsToInsert);
+			docsToInsert.clear();
 			inputStream.close();
 			scanner.close();
 		}
-		System.out.println("All triples inserted");
+		long endTime = System.nanoTime();
+		double diff = (endTime - startTime)/(double)1000000000;
+		System.out.println("All triples inserted in (secs): " + diff);
+		System.out.println("Creating indexes now...");
+		startTime = System.nanoTime();
+		DBObject predObjIndex = BasicDBObjectBuilder.start().
+				add(Constants.FIELD_TRIPLE_PREDICATE, 1).
+				add(Constants.FIELD_TRIPLE_OBJECT, 1).get();
+		starSchemaCollection.ensureIndex(predObjIndex);
+		endTime = System.nanoTime();
+		diff = (endTime - startTime)/(double)1000000000;
+		System.out.println("Indexes created in (secs): " + diff);
 		mongo.close();
 	}
 	
