@@ -48,8 +48,10 @@ public class IDGenerator {
 						Constants.FIELD_HASH_VALUE + ":1, " + 
 						Constants.FIELD_TYPEID + ":1}); " +
 					"var ipNum = parseInt(ip); " +
+					"var i = 0; " +
 					"while(cursor.hasNext()) { " +
 						"var doc = cursor.next(); " +
+						"i = i + 1; " +
 						"var tid = doc['" + Constants.FIELD_TYPEID + "']; " +
 						"if(tid == 1) { " +
 							"idValsCollection.update({" + 
@@ -68,20 +70,24 @@ public class IDGenerator {
 							"ipNum = ipNum + 1; " +
 						"} " +
 					"} " +
-					"return {totalTerms : startNum}; " +	
+					"return {totalTerms : startNum, totalDocs : i}; " +	
 				"} ";
 		String ip = InetAddress.getLocalHost().getHostAddress();
 		String[] ipBlocks = ip.split("\\.");
 		StringBuilder flattenedIP = new StringBuilder().append(ipBlocks[0]).
 				append(ipBlocks[1]).append(ipBlocks[2]).append(ipBlocks[3]);
-		System.out.println("Using IP: " + flattenedIP);
-		System.out.println("Script: " + insertNumIDScript);
+//		System.out.println("Using IP: " + flattenedIP);
+//		System.out.println("Script: " + insertNumIDScript);
 		CommandResult result = localDB.doEval(insertNumIDScript, 
 				flattenedIP.toString());
 		System.out.println("Result: " + result.toString());
 		BasicDBObject resultDoc = (BasicDBObject) result.get("retval");
-		System.out.println("Total terms without types: " + 
-				(resultDoc.getInt("totalTerms")-1));
+		int totalTerms = resultDoc.getInt("totalTerms");
+		int totalDocs = resultDoc.getInt("totalDocs");
+		System.out.println("Total docs: " + totalDocs + 
+				"  Assigned numerical IDs: " + totalTerms);
+		if(totalTerms > totalDocs)
+			throw new Exception("Something went wrong... terms > docs");
 		mongo.close();
 	}
 	
