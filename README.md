@@ -68,6 +68,14 @@ Run this on each shard of the cluster. Running it simultaneously on all the shar
 SubjectID|PredicateID|ObjectID would be generated. Use ```hadoop jar dist/d-sparq.jar dsparq.load.KVFileCreatorMR <input_dir> <output_dir>```.
 Input directory is the one containing original triple files.
 
+##### In case of only 1 node
+
+1. Use ```java -Xms12g -Xmx12g -cp dist/d-sparq.jar dsparq.load.SplitTripleLoader <dir_with_KV_files>```.
+The input is the directory containing the triple file(s) in Key-Value format generated as the output 
+of previous step. Note that this input directory should not contain any other files or sub-directories. 
+Triples are loaded into the local DB. Indexes are also created in this step. 
+2. Go to the section on running queries as a next step.
+
 ##### Separate rdf:type triples
 
 1. Use ```hadoop jar dist/d-sparq.jar dsparq.partitioning.GetTypeTriples <input_dir> <output_dir>```. 
