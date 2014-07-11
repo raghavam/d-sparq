@@ -21,7 +21,7 @@ import dsparq.misc.PropertyFileHandler;
 /**
  * This class takes a set of files containing triples in
  * sub|pred|obj format and loads them to the local DB in 
- * star schema.
+ * star schema format.
  * 
  * @author Raghava
  *
