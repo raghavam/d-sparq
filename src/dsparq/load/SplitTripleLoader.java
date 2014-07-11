@@ -70,10 +70,15 @@ public class SplitTripleLoader {
 					}
 				}
 				BasicDBObject predObj = new BasicDBObject();
+				try {
 				predObj.put(Constants.FIELD_TRIPLE_PREDICATE, 
 						Long.parseLong(tokens[Constants.POSITION_PREDICATE]));
 				predObj.put(Constants.FIELD_TRIPLE_OBJECT, 
 						Long.parseLong(tokens[Constants.POSITION_OBJECT]));
+				}catch(Exception e) {
+					System.out.println("Triple: " + triple);
+					System.out.println("Tokens: " + tokens);
+				}
 				predObjList.add(predObj);
 
 				if(docsToInsert.size() >= 10000) {
