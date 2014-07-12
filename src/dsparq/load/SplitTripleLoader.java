@@ -50,6 +50,7 @@ public class SplitTripleLoader {
 			BufferedInputStream inputStream = new BufferedInputStream(
 					new FileInputStream(tripleFile));
 			Scanner scanner = new Scanner(inputStream, "UTF-8");
+			firstLine = true;
 			while(scanner.hasNext()) {
 				String triple = scanner.nextLine();
 				String[] tokens = triple.trim().split(Constants.REGEX_DELIMITER);
@@ -65,6 +66,9 @@ public class SplitTripleLoader {
 						doc.put(Constants.FIELD_TRIPLE_SUBJECT, previousSubjectID);
 						doc.put(Constants.FIELD_TRIPLE_PRED_OBJ, predObjList);
 						docsToInsert.add(doc);
+						// this is the bulk insert in MongoDB java
+						starSchemaCollection.insert(docsToInsert);
+						docsToInsert.clear();
 						previousSubjectID = subjectID;
 						predObjList = new ArrayList<BasicDBObject>();
 					}
@@ -76,16 +80,10 @@ public class SplitTripleLoader {
 				predObj.put(Constants.FIELD_TRIPLE_OBJECT, 
 						Long.parseLong(tokens[Constants.POSITION_OBJECT]));
 				}catch(Exception e) {
+					System.out.println("Exception: " + e.getMessage());
 					System.out.println("Triple: " + triple);
-					System.out.println("Tokens: " + tokens);
 				}
 				predObjList.add(predObj);
-
-				if(docsToInsert.size() >= 10000) {
-					// this is the bulk insert in MongoDB java
-					starSchemaCollection.insert(docsToInsert);
-					docsToInsert.clear();
-				}
 			}
 			DBObject doc = new BasicDBObject();
 			doc.put(Constants.FIELD_TRIPLE_SUBJECT, subjectID);
