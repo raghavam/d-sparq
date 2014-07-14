@@ -74,7 +74,8 @@ Input directory is the one containing original triple files.
 The input is the directory containing the triple file(s) in Key-Value format generated as the output 
 of previous step. Note that this input directory should not contain any other files or sub-directories. 
 Triples are loaded into the local DB. Indexes are also created in this step. 
-2. Go to the section on running queries as a next step.
+2. Generate predicate selectivity. Use ```java -Xms12g -Xmx12g -cp dist/d-sparq.jar dsparq.load.PredicateSelectivity```.
+3. Go to the section on running queries as a next step.
 
 ##### Separate rdf:type triples
 
@@ -103,8 +104,9 @@ Input directory contains the combined vertexID - partitionID pairs.
 5. Based on the output of above step, get the triples associated with each partition. Use ```hadoop jar dist/d-sparq.jar dsparq.partitioning.PartitionedTripleSeparator <input_dir> <output_dir>```.
 6. Copy the triple files which belong to a particular partition on to that partition. 
 7. Load the triples into local MongoDB and as well as into RDF-3X on each partition. Use ```java -Xms12g -Xmx12g -cp dist/d-sparq.jar dsparq.load.PartitionedTripleLoader <input_triple_file>```.
-Indexes are also created in this step (PartitionedTripleLoader does that). For loading to RDF-3X, use
-```time bin/rdf3xload rdfdb <file>```.
+Indexes are also created in this step (PartitionedTripleLoader does that). 
+8. Generate predicate selectivity. Use ```java -Xms12g -Xmx12g -cp dist/d-sparq.jar dsparq.load.PredicateSelectivity```.
+9. For loading to RDF-3X, use ```time bin/rdf3xload rdfdb <file>```.
 
 ##### Run the queries
 
