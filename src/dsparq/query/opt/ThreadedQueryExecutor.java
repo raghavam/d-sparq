@@ -545,7 +545,7 @@ public class ThreadedQueryExecutor {
 				joinIDs[i] = 
 						Util.getIDFromStrVal(idValCollection, eidValCollection, 
 						bgp.getPredicate().toString(), true);
-				CommandResult result = localDB.doEval(bulkReadScript, joinIDs);
+				CommandResult result = localRdfDB.doEval(bulkReadScript, joinIDs);
 				
 				BasicDBList resultDoc = (BasicDBList) result.get("retval");
 				for(int j = 0; j<resultDoc.size(); j++) {

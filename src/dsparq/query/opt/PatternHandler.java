@@ -20,6 +20,8 @@ import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
 
 import dsparq.misc.Constants;
+import dsparq.misc.HostInfo;
+import dsparq.misc.PropertyFileHandler;
 import dsparq.query.analysis.ConnectingRelation;
 import dsparq.query.analysis.NumericalTriplePattern;
 import dsparq.query.analysis.PipelinePattern;
@@ -31,7 +33,7 @@ public class PatternHandler {
 
 	protected Mongo localMongo;
 	protected DBCollection starSchemaCollection;
-	protected DB localDB;
+	protected DB localRdfDB;
 	protected ExecutorService threadPool;
 	protected Phaser synchPhaser;
 	/*Key: Predicates. They are definitely constants (in sp2 modified queries).
@@ -42,6 +44,8 @@ public class PatternHandler {
 	//Object is the key. This is useful for pipeline patterns.
 	protected Map<String, QueueHandler2> dependentQueueMap;
 	private DBCollection predicateSelectivityCollection;
+	protected PropertyFileHandler propertyFileHandler;
+	private Mongo routerMongo;
 	
 	protected final int LIMIT_RESULTS = 100;			//for testing, remove later
 	
@@ -49,15 +53,21 @@ public class PatternHandler {
 		dependentQueueMap = new HashMap<String, QueueHandler2>();
 		predSubObjMap = new HashMap<Long, SubObj>();
 		threadPool = Executors.newCachedThreadPool();
+		propertyFileHandler = PropertyFileHandler.getInstance();
+		HostInfo routerHostInfo = propertyFileHandler.getMongoRouterHostInfo();
 		try {
-			localMongo = new MongoClient("nimbus5", 10000);
+			localMongo = new MongoClient("localhost", 
+					propertyFileHandler.getShardPort());
+			routerMongo = new MongoClient(routerHostInfo.getHost(), 
+					routerHostInfo.getPort());
 		}catch (Exception e) {
 			e.printStackTrace();
 		}
-		localDB = localMongo.getDB(Constants.MONGO_RDF_DB);
-		predicateSelectivityCollection = localDB.getCollection(
+		localRdfDB = localMongo.getDB(Constants.MONGO_RDF_DB);
+		DB routerRdfDB = routerMongo.getDB(Constants.MONGO_RDF_DB);
+		predicateSelectivityCollection = routerRdfDB.getCollection(
 				Constants.MONGO_PREDICATE_SELECTIVITY);
-		starSchemaCollection = localDB.getCollection(
+		starSchemaCollection = localRdfDB.getCollection(
 				Constants.MONGO_STAR_SCHEMA);
 		synchPhaser = new Phaser(1);
 	}
@@ -255,8 +265,12 @@ public class PatternHandler {
 			
 			String predID = ntp.getPredicate().getEdgeLabel();
 			if(predID.charAt(0) != '?') {
+				System.out.println("predicateSelectivityCollection null? " + 
+						(predicateSelectivityCollection==null));
+				System.out.println("predID: " + predID);
 				DBObject countDoc = predicateSelectivityCollection.findOne(
 						new BasicDBObject(Constants.FIELD_HASH_VALUE, predID));
+				System.out.println("countDoc null? " + (countDoc==null));
 				int count = (Integer) countDoc.get(
 						Constants.FIELD_PRED_SELECTIVITY);
 				posScoreList.add(new PositionScore(i, count));
@@ -266,6 +280,7 @@ public class PatternHandler {
 				posScoreList.add(new PositionScore(i, Integer.MAX_VALUE));
 			}
 		}
+		routerMongo.close();
 		Collections.sort(posScoreList, new ScoreComparator());
 		for(PositionScore pscore : posScoreList) {
 			reorderedStarPattern.addQueryPattern(

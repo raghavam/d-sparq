@@ -1,14 +1,10 @@
 package dsparq.query.opt;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
@@ -59,7 +55,7 @@ public class ThreadedQueryExecutor2 extends PatternHandler {
 	
 	public ThreadedQueryExecutor2() {
 		idCache = new HashMap<String, String>();
-		idValCollection = localDB.getCollection(Constants.MONGO_IDVAL_COLLECTION);	
+		idValCollection = localRdfDB.getCollection(Constants.MONGO_IDVAL_COLLECTION);	
 	}
 	
 	public void processQuery(String query) throws Exception {
@@ -309,8 +305,8 @@ public class ThreadedQueryExecutor2 extends PatternHandler {
 		if(resultID == null)
 			throw new Exception("ID not found for: " + value + 
 					" and its digest value: " + digestValue);
-		Long longID = (Long) resultID.get(Constants.FIELD_ID);
-		idCache.put(value, longID.toString());
+		Double numID = (Double) resultID.get(Constants.FIELD_NUMID);
+		idCache.put(value, Long.toString(numID.longValue()));
 		return idCache.get(value);
 	}
 	
