@@ -350,15 +350,15 @@ public class IDLoader2 extends Configured implements Tool {
 		DB rdfDB = mongo.getDB(Constants.MONGO_RDF_DB);
 		
 /*		
-		DBCollection idValCollection = rdfDB.getCollection(
+		DBCollection idValCollection = localRdfDB.getCollection(
 											Constants.MONGO_IDVAL_COLLECTION);
 		idValCollection.ensureIndex(new BasicDBObject(Constants.FIELD_HASH_VALUE, 1), 
 						new BasicDBObject(Constants.MONGO_UNIQUE_INDEX, true));
-		DBCollection eidValCollection = rdfDB.getCollection(
+		DBCollection eidValCollection = localRdfDB.getCollection(
 											Constants.MONGO_EIDVAL_COLLECTION);
 		eidValCollection.ensureIndex(new BasicDBObject(Constants.FIELD_HASH_VALUE, 1), 
 				new BasicDBObject(Constants.MONGO_UNIQUE_INDEX, true));
- 		DBCollection tripleCollection = rdfDB.getCollection(
+ 		DBCollection tripleCollection = localRdfDB.getCollection(
 											Constants.MONGO_TRIPLE_COLLECTION);
 		BasicDBObject indexDoc = new BasicDBObject();
 		indexDoc.put(Constants.FIELD_TRIPLE_SUBJECT, 1);
