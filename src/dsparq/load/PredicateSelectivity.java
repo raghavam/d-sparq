@@ -1,7 +1,6 @@
 package dsparq.load;
 
 import java.util.ArrayList;
-import java.util.GregorianCalendar;
 import java.util.List;
 
 import com.mongodb.BasicDBObject;
@@ -12,7 +11,8 @@ import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
 
 import dsparq.misc.Constants;
-import dsparq.util.Util;
+import dsparq.misc.HostInfo;
+import dsparq.misc.PropertyFileHandler;
 
 /**
  * Generates the count of the number of documents in which each
@@ -28,8 +28,12 @@ public class PredicateSelectivity {
 	private Mongo mongo;
 	
 	public PredicateSelectivity() {
+		PropertyFileHandler propertyFileHandler = 
+				PropertyFileHandler.getInstance();
+		HostInfo routerHostInfo = propertyFileHandler.getMongoRouterHostInfo();
 		try {
-			mongo = new MongoClient("nimbus2", 10000);
+			mongo = new MongoClient(routerHostInfo.getHost(), 
+					routerHostInfo.getPort());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -37,17 +41,22 @@ public class PredicateSelectivity {
 	
 	public void generatePredicateSelectivity() {
 		try {
+			StringBuilder predStr  = new StringBuilder().append(
+					Constants.FIELD_TRIPLE_PRED_OBJ).append(".").append(
+							Constants.FIELD_TRIPLE_PREDICATE);
+			String predicate = predStr.toString();
 			DB db = mongo.getDB(Constants.MONGO_RDF_DB);
 			DBCollection starSchemaCollection = db.getCollection(
 					Constants.MONGO_STAR_SCHEMA);
 			DBCollection predicateSelectivityCollection = db.getCollection(
 					Constants.MONGO_PREDICATE_SELECTIVITY);
 			List<Long> predList = (List<Long>)starSchemaCollection.distinct(
-					"predobj.predicate");
+					predicate);
 			List<DBObject> selectivityList = 
 					new ArrayList<DBObject>(predList.size());
 			for(Long predID : predList) {
-				DBObject predDoc = new BasicDBObject("predobj.predicate", predID);
+				DBObject predDoc = new BasicDBObject(predicate, 
+						predID);
 				int selectivity = starSchemaCollection.find(predDoc).count();
 				DBObject selectivityDoc = new BasicDBObject();
 				selectivityDoc.put("_id", predID);
@@ -64,9 +73,11 @@ public class PredicateSelectivity {
 	
 	public static void main(String[] args) {
 		System.out.println("Generating predicate selectivity...");
-		GregorianCalendar start = new GregorianCalendar();
+		long startTime = System.nanoTime();
 		new PredicateSelectivity().generatePredicateSelectivity();
-		Util.getElapsedTime(start);
-		System.out.println("Done");
+		long endTime = System.nanoTime();
+		double diff = (endTime - startTime)/(double)1000000000;
+		System.out.println("Time taken to create predicate " +
+				"selectivity (secs): " + diff);
 	}
 }
