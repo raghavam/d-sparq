@@ -265,12 +265,9 @@ public class PatternHandler {
 			
 			String predID = ntp.getPredicate().getEdgeLabel();
 			if(predID.charAt(0) != '?') {
-				System.out.println("predicateSelectivityCollection null? " + 
-						(predicateSelectivityCollection==null));
-				System.out.println("predID: " + predID);
 				DBObject countDoc = predicateSelectivityCollection.findOne(
-						new BasicDBObject(Constants.FIELD_HASH_VALUE, predID));
-				System.out.println("countDoc null? " + (countDoc==null));
+						new BasicDBObject(Constants.FIELD_HASH_VALUE, 
+								Long.valueOf(predID)));
 				int count = (Integer) countDoc.get(
 						Constants.FIELD_PRED_SELECTIVITY);
 				posScoreList.add(new PositionScore(i, count));
