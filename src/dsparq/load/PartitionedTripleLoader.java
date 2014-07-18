@@ -8,7 +8,6 @@ import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.util.ArrayList;
-import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -40,8 +39,6 @@ public class PartitionedTripleLoader {
 	private Mongo mongo;
 	private DBCollection tripleCollection;
 	private DBCollection ptripleCollection;
-	private DBCollection idValCollection;
-	private DBCollection eidValCollection;
 	private DBCollection starSchemaCollection;
 	private int hostID;
 	
@@ -68,9 +65,8 @@ public class PartitionedTripleLoader {
 					Constants.MONGO_TRIPLE_COLLECTION);
 			ptripleCollection = localDB.getCollection(
 					Constants.MONGO_PARTITIONED_VERTEX_COLLECTION);
-			starSchemaCollection = localDB.getCollection(Constants.MONGO_STAR_SCHEMA);
-			idValCollection = db.getCollection(Constants.MONGO_IDVAL_COLLECTION);
-			eidValCollection = db.getCollection(Constants.MONGO_EIDVAL_COLLECTION);
+			starSchemaCollection = localDB.getCollection(
+					Constants.MONGO_STAR_SCHEMA);
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
@@ -110,6 +106,7 @@ public class PartitionedTripleLoader {
 		}
 		if(!docsToInsert.isEmpty())
 			ptripleCollection.insert(docsToInsert);
+		reader.close();
 		mongo.close();
 	}
 	
@@ -166,6 +163,7 @@ public class PartitionedTripleLoader {
 		}
 		if(!docsToInsert.isEmpty())
 			starSchemaCollection.insert(docsToInsert);
+		reader.close();
 		mongo.close();
 	}
 	
@@ -220,17 +218,11 @@ public class PartitionedTripleLoader {
 				System.out.println("Reached " + lineCount);
 		}
 		writer.close();
+		reader.close();
 		mongo.close();
 	}
 	
 	public void createIndexes() {
-//		ptripleCollection.ensureIndex(new BasicDBObject(
-//							Constants.FIELD_TRIPLE_SUBJECT, 1));
-//		ptripleCollection.ensureIndex(new BasicDBObject(
-//				Constants.FIELD_TRIPLE_PREDICATE, 1));
-//		ptripleCollection.ensureIndex(new BasicDBObject(
-//				Constants.FIELD_TRIPLE_OBJECT, 1));
-		// compound index on predicate & object
 		DBObject predObjIndex = BasicDBObjectBuilder.start().
 							add(Constants.FIELD_TRIPLE_PREDICATE, 1).
 							add(Constants.FIELD_TRIPLE_OBJECT, 1).get();
@@ -239,13 +231,14 @@ public class PartitionedTripleLoader {
 	}
 	
 	public static void main(String[] args) throws Exception {
-		GregorianCalendar start = new GregorianCalendar();
+		long startTime = System.nanoTime();
 		PartitionedTripleLoader tripleLoader = new PartitionedTripleLoader();
 		tripleLoader.loadTriplesInStarSchema();
 		tripleLoader.createIndexes();
 		//Split the two tasks of loading triples to MongoDB and writing to 
 		//a file just to note the time taken for each task.
 //		tripleLoader.writeTriples();
-		System.out.println("Time taken (millis): " + Util.getElapsedTime(start));
+		System.out.println("Time taken (millis): " + 
+				Util.getElapsedTime(startTime));
 	}
 }

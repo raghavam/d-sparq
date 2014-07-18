@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.net.InetAddress;
 import java.util.ArrayList;
-import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -19,10 +18,10 @@ import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
 
 import dsparq.misc.Constants;
 import dsparq.misc.HostInfo;
-import dsparq.misc.PropertyFileHandler;
 import dsparq.util.Util;
 
 /**
@@ -56,7 +55,7 @@ public class TripleIDInserter {
 			Matcher matcher = pattern.matcher(hostName);
 			matcher.find();
 			int hostID = Integer.parseInt(matcher.group());
-			mongo = new Mongo(mongosInfo.get(hostID%mongosCount).getHost(), 
+			mongo = new MongoClient(mongosInfo.get(hostID%mongosCount).getHost(), 
 						mongosInfo.get(hostID%mongosCount).getPort());
 			DB db = mongo.getDB(Constants.MONGO_RDF_DB);
 			idValCollection = db.getCollection(
@@ -76,7 +75,7 @@ public class TripleIDInserter {
 		File[] allfiles = inputPath.listFiles();
 		long count = 1;
 		List<DBObject> docList = new ArrayList<DBObject>();
-		GregorianCalendar start = new GregorianCalendar();
+		long startTime = System.nanoTime();
 		for(File file : allfiles) {
 			FileReader fileReader = new FileReader(file);
 			BufferedReader reader = new BufferedReader(fileReader);
@@ -126,7 +125,8 @@ public class TripleIDInserter {
 			tripleCollection.insert(docList);
 			docList.clear();
 		}
-		Util.getElapsedTime(start);
+		double secs = Util.getElapsedTime(startTime);
+		System.out.println("Time taken (secs): " + secs);
 		mongo.close();
 		model.close();
 	}

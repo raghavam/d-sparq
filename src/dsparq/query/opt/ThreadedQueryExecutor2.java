@@ -111,9 +111,9 @@ public class ThreadedQueryExecutor2 extends PatternHandler {
 							undirGraph, dirGraph));
 				}
 			}
-			System.out.println("\nQuery Patterns: ");
+//			System.out.println("\nQuery Patterns: ");
 			for(QueryPattern queryPattern : queryPatterns) {
-				System.out.println(queryPattern.toString() + "\n");
+//				System.out.println(queryPattern.toString() + "\n");
 				synchPhaser.register();
 				threadPool.execute(new PatternExecutor(queryPattern));
 			}
@@ -128,7 +128,7 @@ public class ThreadedQueryExecutor2 extends PatternHandler {
 			}
 		}
 		finally {
-			System.out.println(">>>>>>>Closing Mongo now...");
+//			System.out.println(">>>>>>>Closing Mongo now...");
 			localMongo.close();
 		}
 	}
@@ -155,8 +155,8 @@ public class ThreadedQueryExecutor2 extends PatternHandler {
 			throw new Exception("Unexpected type " + 
 						queryPattern.toString());
 		DBCursor cursor; 
-		System.out.println("Limiting results to " + LIMIT_RESULTS + 
-				" for testing.....");
+//		System.out.println("Limiting results to " + LIMIT_RESULTS + 
+//				" for testing.....");
 //		System.out.println(queryDoc.toString());
 		cursor = (queryDoc == null) ? starSchemaCollection.find() : 
 			starSchemaCollection.find(queryDoc);
@@ -346,7 +346,7 @@ public class ThreadedQueryExecutor2 extends PatternHandler {
 					"number of times to execute query");
 			System.exit(-1);
 		}
-		GregorianCalendar start = new GregorianCalendar();
+		long startTime = System.nanoTime();
 		File queryFile = new File(args[0]);
 //		outputFileName = queryFile.getName() + "-opt";
 		int numTimes = Integer.parseInt(args[1]);
@@ -358,9 +358,9 @@ public class ThreadedQueryExecutor2 extends PatternHandler {
 			scanner.close();
 			new ThreadedQueryExecutor2().processQuery(query.toString());
 		}
-		double secs = Util.getElapsedTime(start);
-		System.out.println("Total Secs: " + secs + "  For " + 
-				numTimes + ": " + secs/numTimes);
+		double secs = Util.getElapsedTime(startTime);
+		System.out.println("Total time taken (secs): " + secs + 
+				"  Avg time across " + numTimes + " runs: " + secs/numTimes);
 	}
 	
 	class PatternExecutor implements Runnable {

@@ -1,20 +1,14 @@
 package dsparq.query.opt;
 
 import java.util.ArrayList;
-import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 
 import jsr166y.Phaser;
 
@@ -23,10 +17,8 @@ import com.hp.hpl.jena.query.Query;
 import com.hp.hpl.jena.query.QueryFactory;
 import com.hp.hpl.jena.sparql.algebra.Algebra;
 import com.hp.hpl.jena.sparql.algebra.Op;
-import com.mongodb.AggregationOutput;
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
-import com.mongodb.CommandResult;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
@@ -463,9 +455,9 @@ public class ThreadedQueryExecutor {
 			"?person <http://xmlns.com/foaf/0.1/name> ?name " +
 			"} ";
 		
-		GregorianCalendar start = new GregorianCalendar();
+		long startTime = System.nanoTime();
 		new ThreadedQueryExecutor().processQuery(sp2Query4);
-		Util.getElapsedTime(start);
+		Util.getElapsedTime(startTime);
 	}
 	
 	

@@ -1,14 +1,10 @@
 package dsparq.query;
 
-import java.util.ArrayList;
-import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Map.Entry;
 
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
@@ -16,23 +12,15 @@ import com.hp.hpl.jena.query.Query;
 import com.hp.hpl.jena.query.QueryFactory;
 import com.hp.hpl.jena.sparql.algebra.Algebra;
 import com.hp.hpl.jena.sparql.algebra.Op;
-import com.hp.hpl.jena.sparql.algebra.OpAsQuery;
-import com.hp.hpl.jena.sparql.algebra.op.OpBGP;
-import com.hp.hpl.jena.sparql.algebra.op.OpFilter;
-import com.hp.hpl.jena.sparql.algebra.op.OpProject;
-import com.hp.hpl.jena.sparql.core.BasicPattern;
-import com.hp.hpl.jena.sparql.core.Var;
-import com.hp.hpl.jena.sparql.util.FmtUtils;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
 
 import dsparq.misc.Constants;
-import dsparq.misc.HostInfo;
-import dsparq.misc.PropertyFileHandler;
 import dsparq.util.Util;
 
 /**
@@ -53,8 +41,8 @@ public class QueryExecutorWithoutOp {
 	
 	public QueryExecutorWithoutOp() {
 		try {
-			mongoS = new Mongo("nimbus2", 27017);
-			localMongo = new Mongo(Constants.MONGO_LOCAL_HOST, 10000);
+			mongoS = new MongoClient("nimbus2", 27017);
+			localMongo = new MongoClient(Constants.MONGO_LOCAL_HOST, 10000);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -305,12 +293,13 @@ public class QueryExecutorWithoutOp {
 			throw new Exception("Testing for only 2 BGPs");
 		
 		// fetch first bgp from DB and query other using the subject id
-		GregorianCalendar start = new GregorianCalendar();
+		long startTime = System.nanoTime();
 		TriplesHolder lastBGPData = fetchDataFromDB(
 				basicGraphPatterns.get(basicGraphPatterns.size()-1));
 		System.out.print("Time to retrieve first BGP: ");
-		Util.getElapsedTime(start);
-		start = new GregorianCalendar();
+		double secs = Util.getElapsedTime(startTime);
+		System.out.println("Time taken (secs): " + secs);
+		startTime = System.nanoTime();
 		System.out.println("Size of first BGP: " + lastBGPData.getTripleRows().size());
 		BasicDBObject queryDoc = new BasicDBObject();
 		TriplesHolder answerTable = new TripleTable();
@@ -334,7 +323,8 @@ public class QueryExecutorWithoutOp {
 			count++;
 			if(count%10000 == 0) {
 				System.out.print("Processed 10k, took: ");
-				Util.getElapsedTime(start);
+				secs = Util.getElapsedTime(startTime);
+				System.out.println("Time taken (secs): " + secs);
 				break;
 			}
 		}
@@ -468,15 +458,12 @@ public class QueryExecutorWithoutOp {
 		"?x <http://lubm.example.org#takesCourse> ?c . " +
 		"} ";
 		
-		if(Boolean.parseBoolean(args[0])) {		
-			GregorianCalendar start = new GregorianCalendar();
+		long startTime = System.nanoTime();
+		if(Boolean.parseBoolean(args[0])) 
 			new QueryExecutorWithoutOp().processQuery(shortQuery);
-			Util.getElapsedTime(start);
-		}
-		else {
-			GregorianCalendar start = new GregorianCalendar();
+		else 
 			new QueryExecutorWithoutOp().testTripleRetrieval(shortQuery);
-			Util.getElapsedTime(start);
-		}			
+		double secs = Util.getElapsedTime(startTime);
+		System.out.println("Time taken (secs): " + secs);
 	}
 }

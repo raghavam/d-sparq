@@ -1,13 +1,12 @@
 package dsparq.load;
 
-import java.util.GregorianCalendar;
-
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
 
 import dsparq.misc.Constants;
 import dsparq.util.Util;
@@ -15,7 +14,7 @@ import dsparq.util.Util;
 public class IntegerIDGenerator {
 
 	public void generateIDs() throws Exception {
-		Mongo mongo = new Mongo("localhost", 27017);
+		Mongo mongo = new MongoClient("localhost", 27017);
 		DB db = mongo.getDB(Constants.MONGO_RDF_DB);
 		DBCollection idValCollection = db.getCollection(
 							Constants.MONGO_IDVAL_COLLECTION);
@@ -26,7 +25,7 @@ public class IntegerIDGenerator {
 		System.out.println("Total docs: " + totalDocs);
 		long progressCount = 0;
 		double multiplier = 1;
-		GregorianCalendar start = new GregorianCalendar();
+		long startTime = System.nanoTime();
 		while(cursor.hasNext()) {
 			DBObject doc = cursor.next();
 			String hashValue = (String) doc.get(Constants.FIELD_HASH_VALUE);
@@ -61,11 +60,11 @@ public class IntegerIDGenerator {
 			}									
 		}	
 		mongo.close();
-		Util.getElapsedTime(start);
+		Util.getElapsedTime(startTime);
 	}
 	
 	public void generateIDsForProps() throws Exception {
-		Mongo mongo = new Mongo("localhost", 27017);
+		Mongo mongo = new MongoClient("localhost", 27017);
 		DB db = mongo.getDB(Constants.MONGO_RDF_DB);
 		DBCollection eidValCollection = db.getCollection(
 							Constants.MONGO_EIDVAL_COLLECTION);
@@ -75,7 +74,7 @@ public class IntegerIDGenerator {
 		System.out.println("Total docs: " + totalDocs);
 		long progressCount = 0;
 		double multiplier = 1;
-		GregorianCalendar start = new GregorianCalendar();
+		long startTime = System.nanoTime();
 		while(cursor.hasNext()) {
 			DBObject doc = cursor.next();
 			String hashValue = (String) doc.get(Constants.FIELD_HASH_VALUE);
@@ -104,7 +103,7 @@ public class IntegerIDGenerator {
 			}									
 		}	
 		mongo.close();
-		Util.getElapsedTime(start);
+		Util.getElapsedTime(startTime);
 	} 
 	
 	public static void main(String[] args) throws Exception {

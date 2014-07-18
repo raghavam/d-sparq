@@ -1,49 +1,28 @@
 package dsparq.sample;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.InputStream;
-import java.io.PrintWriter;
 import java.io.RandomAccessFile;
 import java.io.StringReader;
 import java.math.BigInteger;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.GregorianCalendar;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.UUID;
 import java.util.Map.Entry;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.Set;
+import java.util.UUID;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.Text;
 import org.jgrapht.graph.DirectedMultigraph;
 import org.jgrapht.traverse.BreadthFirstIterator;
 import org.openjena.riot.RiotReader;
 import org.openjena.riot.lang.LangNTriples;
-import org.semanticweb.yars.nx.Literal;
 import org.semanticweb.yars.nx.parser.NxParser;
 
 import redis.clients.jedis.Jedis;
@@ -54,45 +33,26 @@ import redis.clients.jedis.ShardedJedis;
 import redis.clients.jedis.ShardedJedisPipeline;
 import redis.clients.util.Hashing;
 
-import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.Table;
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Node_Literal;
 import com.hp.hpl.jena.graph.Triple;
-import com.hp.hpl.jena.query.Query;
-import com.hp.hpl.jena.query.QueryFactory;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
-import com.hp.hpl.jena.rdf.model.Property;
-import com.hp.hpl.jena.rdf.model.RDFNode;
-import com.hp.hpl.jena.rdf.model.Resource;
-import com.hp.hpl.jena.rdf.model.Statement;
 import com.hp.hpl.jena.rdf.model.StmtIterator;
-import com.hp.hpl.jena.sparql.algebra.Algebra;
-import com.hp.hpl.jena.sparql.algebra.Op;
 import com.hp.hpl.jena.sparql.util.FmtUtils;
-import com.hp.hpl.jena.util.FileManager;
-import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.CommandResult;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoException;
 import com.mongodb.WriteConcern;
-import com.mongodb.WriteResult;
 
 import dsparq.misc.Constants;
 import dsparq.misc.HostInfo;
 import dsparq.misc.PropertyFileHandler;
-import dsparq.query.QueryVisitor;
-import dsparq.query.TripleComparator;
-import dsparq.query.TripleTable;
-import dsparq.query.analysis.RDFVertex;
-import dsparq.util.LRUCache;
 import dsparq.util.Util;
 
 public class MongoConnector {
@@ -714,11 +674,11 @@ public class MongoConnector {
 		Jedis localJedis = new Jedis("localhost", 6379, 
 				Constants.INFINITE_TIMEOUT);
 		localJedis.connect();
-		GregorianCalendar start = new GregorianCalendar();
+		long startTime = System.nanoTime();
 		localJedis.eval(script, Collections.singletonList("1"), 
 				Collections.singletonList("1"));
 		localJedis.disconnect();
-		double secs = Util.getElapsedTime(start);
+		double secs = Util.getElapsedTime(startTime);
 		System.out.println("Total secs: " + secs);
 	}
 	
@@ -727,16 +687,16 @@ public class MongoConnector {
 				Constants.INFINITE_TIMEOUT);
 		Pipeline p = localJedis.pipelined();
 		System.out.println("Deleting some keys...");
-		GregorianCalendar start1 = new GregorianCalendar();
+		long start1 = System.nanoTime();
 		localJedis.del("subCount", "typeCount", "propCount");
 		System.out.println("Time taken: " + Util.getElapsedTime(start1));
 		System.out.println("Retrieving all keys...");
-		GregorianCalendar start = new GregorianCalendar();
+		long startTime = System.nanoTime();
 		Set<String> keys = localJedis.keys("*");
-		double secs = Util.getElapsedTime(start);
+		double secs = Util.getElapsedTime(startTime);
 		System.out.println("No of keys: " + keys.size());
 		System.out.println("Time taken: " + secs);
-		start = new GregorianCalendar();
+		startTime = System.nanoTime();
 		int count = 0;
 		for(String key : keys) {
 			p.hgetAll(key);
@@ -745,8 +705,28 @@ public class MongoConnector {
 				break;
 		}
 		p.sync();
-		System.out.println("Time taken: " + Util.getElapsedTime(start));
+		System.out.println("Time taken: " + Util.getElapsedTime(startTime));
 		System.out.println("Done");
+	}
+	
+	private static void testMongoNullException() throws Exception {
+		long predicateID = 554406;
+		Mongo mongo = new MongoClient("localhost", 27017);
+		DB localDB = mongo.getDB(Constants.MONGO_RDF_DB);
+		DBCollection predicateSelectivityCollection = localDB.getCollection(
+				Constants.MONGO_PREDICATE_SELECTIVITY);
+		DBObject countDoc = predicateSelectivityCollection.findOne(
+				new BasicDBObject(Constants.FIELD_HASH_VALUE, predicateID));
+		System.out.println("countDoc null? " + (countDoc==null));
+		int count = (Integer) countDoc.get(
+				Constants.FIELD_PRED_SELECTIVITY);
+		System.out.println("Count of predicate: " + count);
+		
+		DBObject countDoc1 = predicateSelectivityCollection.findOne(
+				new BasicDBObject(Constants.FIELD_HASH_VALUE, 
+						Long.toString(predicateID)));
+		System.out.println("countDoc null? " + (countDoc1==null));
+		mongo.close();
 	}
 	
 	public static void main(String[] args) throws Exception {
@@ -770,12 +750,8 @@ public class MongoConnector {
 //		testMongoDupID();
 //		deleteRedisHashField();
 //		testRedisReadSpeed();
+		testMongoNullException();
 		
-		RDFVertex v1 = new RDFVertex();
-		v1.setLabel("s1");
-		RDFVertex v2 = new RDFVertex();
-		v2.setLabel("s1");
-		System.out.println(v1.equals(v2));
 	}
 }
 

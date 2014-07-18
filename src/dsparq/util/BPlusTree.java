@@ -3,7 +3,6 @@ package dsparq.util;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Random;
 import java.util.Stack;
@@ -286,29 +285,32 @@ public class BPlusTree<E> {
 		Random r = new Random();
 		System.out.println("Creating B+ tree of order " + bplusTree.getOrder());
 		List<Long> keylst = new ArrayList<Long>();
-		GregorianCalendar start = new GregorianCalendar();
+		long startTime = System.nanoTime();
 		for(int i=1; i<=2000000; i++) {
 			Long randomLong = new Long(Math.abs(r.nextLong()));
 			bplusTree.insert(randomLong);
 			keylst.add(randomLong);
 		}
-		Util.getElapsedTime(start);
+		System.out.println("Time taken (secs): " + 
+				Util.getElapsedTime(startTime));
 		System.out.println("Tree height: " + bplusTree.getHeight());
-		start = new GregorianCalendar();
+		startTime = System.nanoTime();
 		System.out.println("Fetching all leaves....");
 		List<Long> allKeys = bplusTree.getAllKeys();
 		System.out.println("Key count: " + allKeys.size());
-		Util.getElapsedTime(start);
+		System.out.println("Time taken (secs): " + 
+				Util.getElapsedTime(startTime));
 		allKeys.clear();
 		System.out.println("\nSearching for all the keys...");
-		start = new GregorianCalendar();
+		startTime = System.nanoTime();
 		boolean isPresent = false;
 		for(Long key : keylst) {
 			isPresent = bplusTree.isPresent(key);
 			if(!isPresent)
 				throw new Exception("Not expecting false value: " + key);
 		}
-		Util.getElapsedTime(start);
+		System.out.println("Time taken (secs): " + 
+				Util.getElapsedTime(startTime));
 	
 		// example-2
 /*		

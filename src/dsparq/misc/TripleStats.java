@@ -2,11 +2,15 @@ package dsparq.misc;
 
 import java.io.FileInputStream;
 import java.util.ArrayList;
-import java.util.GregorianCalendar;
 import java.util.List;
 
 import org.semanticweb.yars.nx.Node;
 import org.semanticweb.yars.nx.parser.NxParser;
+
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisShardInfo;
+import redis.clients.jedis.ShardedJedis;
+import redis.clients.util.Hashing;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.DB;
@@ -15,11 +19,6 @@ import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
-
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisShardInfo;
-import redis.clients.jedis.ShardedJedis;
-import redis.clients.util.Hashing;
 
 import dsparq.util.Util;
 
@@ -80,7 +79,7 @@ public class TripleStats {
 			System.out.println("Counting triples...");
 			DBCursor cursor = starSchemaCollection.find();
 			long totalTriples = 0;
-			GregorianCalendar start = new GregorianCalendar();
+			long startTime = System.nanoTime();
 			while(cursor.hasNext()) {
 				DBObject result = cursor.next();
 				BasicDBList predObjList = 
@@ -89,11 +88,8 @@ public class TripleStats {
 				totalTriples += predObjList.size();
 			}
 			System.out.println("Total triples: " + totalTriples);
-			double secs = Util.getElapsedTime(start);
-			long totalMins = (long)secs/60;
-			double totalSecs = secs - (totalMins * 60);
-			System.out.println("Secs: " + secs);
-			System.out.println(totalMins + " mins and " + totalSecs + " secs");
+			double secs = Util.getElapsedTime(startTime);
+			System.out.println("Time taken (secs): " + secs);
 		}
 		finally {
 			if(mongo != null)

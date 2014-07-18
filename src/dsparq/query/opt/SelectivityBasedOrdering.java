@@ -1,7 +1,6 @@
 package dsparq.query.opt;
 
 import java.util.ArrayList;
-import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -40,7 +39,7 @@ public class SelectivityBasedOrdering extends QueryExecutorWithoutOp {
 	}
 	
 	public void processQuery(String query) throws Exception {
-		GregorianCalendar start = new GregorianCalendar();
+		long startTime = System.nanoTime();
 		Query queryObj = QueryFactory.create(query);
 		QueryVisitor queryVisitor = new QueryVisitor(queryObj);
 		Op op = Algebra.compile(queryObj);
@@ -52,7 +51,7 @@ public class SelectivityBasedOrdering extends QueryExecutorWithoutOp {
 		TripleTable resultTriples = fetchDataFromDB(reOrderedBGPs.get(0));
 		if(resultTriples.getTripleRows().isEmpty()) {
 			System.out.println("Empty result");
-			Util.getElapsedTime(start);
+			System.out.println(Util.getElapsedTime(startTime));
 			System.exit(0);
 		}
 		resultTriplesLst.add(resultTriples);
@@ -63,7 +62,7 @@ public class SelectivityBasedOrdering extends QueryExecutorWithoutOp {
 				TripleTable tripleTable = fetchDataFromDB(reOrderedBGPs.get(i));
 				if(tripleTable.getTripleRows().isEmpty()) {
 					System.out.println("Empty result");
-					Util.getElapsedTime(start);
+					Util.getElapsedTime(startTime);
 					System.exit(0);
 				}
 				resultTriplesLst.add(tripleTable);
@@ -124,7 +123,7 @@ public class SelectivityBasedOrdering extends QueryExecutorWithoutOp {
 			System.out.println();
 		}
 		
-		Util.getElapsedTime(start);
+		Util.getElapsedTime(startTime);
 	}
 	
 	private List<Triple> reOrderAndGetBGPs(List<Triple> bgps) {

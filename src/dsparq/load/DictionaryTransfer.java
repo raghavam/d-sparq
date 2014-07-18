@@ -1,7 +1,6 @@
 package dsparq.load;
 
 import java.util.ArrayList;
-import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Set;
 
@@ -110,10 +109,10 @@ public class DictionaryTransfer {
 	
 	public static void main(String[] args) throws Exception {
 		System.out.println("Transferring dictionary from Redis to MongoDB");
-		GregorianCalendar start = new GregorianCalendar();
+		long startTime = System.nanoTime();
 		new DictionaryTransfer().transferDictionary();
 		System.out.println("Done");
-		double secs = Util.getElapsedTime(start);
+		double secs = Util.getElapsedTime(startTime);
 		System.out.println("Total Secs: " + secs);
 	}
 }

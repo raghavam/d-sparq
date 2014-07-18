@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
-import java.util.GregorianCalendar;
 import java.util.List;
 
 import com.hp.hpl.jena.graph.Triple;
@@ -16,6 +15,7 @@ import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
 
 import dsparq.misc.Constants;
 import dsparq.util.Util;
@@ -27,7 +27,7 @@ public class SplitTripleLoader2 {
 		File[] allfiles = inputPath.listFiles();
 		long count = 1;
 		Model model = ModelFactory.createDefaultModel();
-		Mongo mongo = new Mongo("nimbus2", 27017);
+		Mongo mongo = new MongoClient("nimbus2", 27017);
 		DB db = mongo.getDB(Constants.MONGO_RDF_DB);
 		DBCollection idValCollection = db.getCollection(
 							Constants.MONGO_IDVAL_COLLECTION);
@@ -42,7 +42,7 @@ public class SplitTripleLoader2 {
 		eidValCollection.ensureIndex(indexDoc, uniqueOption);
 		List<DBObject> docList1 = new ArrayList<DBObject>();
 		List<DBObject> docList2 = new ArrayList<DBObject>();
-		GregorianCalendar start = new GregorianCalendar();
+		long startTime = System.nanoTime();
 		for(File file : allfiles) {
 			FileReader fileReader = new FileReader(file);
 			BufferedReader reader = new BufferedReader(fileReader);
@@ -102,7 +102,8 @@ public class SplitTripleLoader2 {
 			eidValCollection.insert(docList2);
 			docList2.clear();
 		}
-		Util.getElapsedTime(start);
+		double secs = Util.getElapsedTime(startTime);
+		System.out.println("Time taken (secs): " + secs);
 		mongo.close();
 		model.close();
 	}

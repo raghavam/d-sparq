@@ -89,10 +89,14 @@ class JoinProcessor2 extends PatternHandler implements Runnable {
 					predObjDoc = handleNumericalTriplePattern(ntp, null);
 				DBObject combinedDoc = createSubPredObjDoc(subjectDoc, predObjDoc);
 				DBCursor cursor;
-				if(combinedDoc == null)
-					cursor = starSchemaCollection.find().limit(LIMIT_RESULTS);
-				else
-					cursor = starSchemaCollection.find(combinedDoc).limit(LIMIT_RESULTS);
+				if(combinedDoc == null) {
+//					cursor = starSchemaCollection.find().limit(LIMIT_RESULTS);
+					cursor = starSchemaCollection.find();
+				}
+				else {
+//					cursor = starSchemaCollection.find(combinedDoc).limit(LIMIT_RESULTS);
+					cursor = starSchemaCollection.find(combinedDoc);
+				}
 				long count = 0;
 				while(cursor.hasNext()) {
 					cursor.next();
@@ -113,10 +117,14 @@ class JoinProcessor2 extends PatternHandler implements Runnable {
 				if(starDoc != null)
 					System.out.println("starDoc: " + starDoc.toString());
 				DBCursor cursor;
-				if(starDoc == null)
-					cursor = starSchemaCollection.find().limit(LIMIT_RESULTS);
-				else
-					cursor = starSchemaCollection.find(starDoc).limit(LIMIT_RESULTS);
+				if(starDoc == null) {
+//					cursor = starSchemaCollection.find().limit(LIMIT_RESULTS);
+					cursor = starSchemaCollection.find();
+				}
+				else {
+//					cursor = starSchemaCollection.find(starDoc).limit(LIMIT_RESULTS);
+					cursor = starSchemaCollection.find(starDoc);
+				}
 				System.out.println("Cursor... ");
 				try {
 					System.out.println("In QueueHandler2, StarPattern, " +
@@ -131,10 +139,14 @@ class JoinProcessor2 extends PatternHandler implements Runnable {
 				DBObject queryDoc = handlePipelinePattern(
 						connectingRelationPattern, joinID);
 				DBCursor cursor;
-				if(queryDoc == null)
-					cursor = starSchemaCollection.find().limit(LIMIT_RESULTS);
-				else
-					cursor = starSchemaCollection.find(queryDoc).limit(LIMIT_RESULTS);
+				if(queryDoc == null) {
+//					cursor = starSchemaCollection.find().limit(LIMIT_RESULTS);
+					cursor = starSchemaCollection.find();
+				}
+				else {
+//					cursor = starSchemaCollection.find(queryDoc).limit(LIMIT_RESULTS);
+					cursor = starSchemaCollection.find(queryDoc);
+				}
 				System.out.println("In QueueHandler2, PipelinePattern, " +
 						"#docs: " + cursor.count());
 				//TODO: Check if more queues need to be created

@@ -1,7 +1,5 @@
 package dsparq.load;
 
-import java.util.GregorianCalendar;
-
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -35,10 +33,10 @@ public class IndexCreator {
 	
 	public static void main(String[] args) throws Exception {
 		System.out.println("Creating index...");
-		GregorianCalendar start = new GregorianCalendar();
+		long startTime = System.nanoTime();
 		new IndexCreator().createPredicateObjectIndex();
 		System.out.println("Index creation time, secs: " + 
-					Util.getElapsedTime(start));
+					Util.getElapsedTime(startTime));
 		System.out.println("Done");
 	}
 }

@@ -1,7 +1,6 @@
 package dsparq.query.opt;
 
 import java.util.Comparator;
-import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +16,7 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
 
 import dsparq.misc.Constants;
 import dsparq.query.QueryVisitor;
@@ -37,12 +37,12 @@ public class Query2Processor {
 	protected DBCollection tripleCollection; 
 	protected DBCollection idValCollection;
 	protected DBCollection eidValCollection;
-	private GregorianCalendar start;
+	private long startTime;
 	
 	public Query2Processor() {
 		try {
-			mongoS = new Mongo("nimbus2", 27017);
-			localMongo = new Mongo(Constants.MONGO_LOCAL_HOST, 10000);
+			mongoS = new MongoClient("nimbus2", 27017);
+			localMongo = new MongoClient(Constants.MONGO_LOCAL_HOST, 10000);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -54,7 +54,7 @@ public class Query2Processor {
 	}
 
 	public void processQuery(String query) throws Exception {
-		start = new GregorianCalendar();
+		startTime = System.nanoTime();
 		Query queryObj = QueryFactory.create(query);
 		QueryVisitor queryVisitor = new QueryVisitor(queryObj);
 		Op op = Algebra.compile(queryObj);
@@ -95,8 +95,7 @@ public class Query2Processor {
 		bgp4Result.clear();
 		bgp3Result.clear();
 		bgp2Result.clear();
-		System.out.println("Remaining time");
-		Util.getElapsedTime(start);
+		System.out.println("Time taken (secs): " + Util.getElapsedTime(startTime));
 	}
 	
 	private void fetchDataForBGP4(TripleTable prevResult1, 
@@ -119,8 +118,8 @@ public class Query2Processor {
 			queryDoc.remove(Constants.FIELD_TRIPLE_SUBJECT);
 		}
 		System.out.println("Tree constructed with " + numResults1 + " leaves");
-		Util.getElapsedTime(start);
-		start = new GregorianCalendar();
+		Util.getElapsedTime(startTime);
+		startTime = System.nanoTime();
 		
 		boolean isPresent = false;
 		long numResults2 = 0;
@@ -132,8 +131,8 @@ public class Query2Processor {
 				numResults2++;
 		}
 		System.out.println("Searching done, results: " + numResults2);
-		Util.getElapsedTime(start);
-		start = new GregorianCalendar();
+		System.out.println("Time taken (secs): " + Util.getElapsedTime(startTime));
+		startTime = System.nanoTime();
 	}
 	
 	private TripleTable fetchDataForBGP(String subjectVar, 

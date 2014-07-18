@@ -32,15 +32,10 @@ public class Util {
 		return hexStr.toString();
 	}	
 	
-	public static double getElapsedTime(GregorianCalendar startTime) {
-		GregorianCalendar iterEnd = new GregorianCalendar();		
-		double diffMillis = iterEnd.getTimeInMillis() - startTime.getTimeInMillis();
-		double totalDiff = diffMillis/1000;
-//		long totalMins = (long)totalDiff/60;
-//		double totalSecs = totalDiff - (totalMins * 60);
-//		System.out.println("Secs: " + totalDiff);
-//		System.out.println(totalMins + " mins and " + totalSecs + " secs");
-		return totalDiff;
+	public static double getElapsedTime(long startTimeNano) {
+		long endTimeNano = System.nanoTime();		
+		double diffSecs = (endTimeNano - startTimeNano)/(double)1000000000;
+		return diffSecs;
 	}
 	
 	public static long getIDFromStrVal(DBCollection idValCollection, 

@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
-import java.util.GregorianCalendar;
 import java.util.List;
 
 import com.mongodb.BasicDBObject;
@@ -113,10 +112,10 @@ public class HashDigestLoader {
 			System.out.println("This is not a directory");
 			System.exit(-1);
 		}
-		GregorianCalendar start = new GregorianCalendar();
+		long startTime = System.nanoTime();
 		new HashDigestLoader().loadTripleIDsIntoDB(dir.listFiles());
 //		new HashDigestLoader().countTypes(dir.listFiles());
-		System.out.println("Time taken (secs): " + Util.getElapsedTime(start));
+		System.out.println("Time taken (secs): " + Util.getElapsedTime(startTime));
 	}
 
 }

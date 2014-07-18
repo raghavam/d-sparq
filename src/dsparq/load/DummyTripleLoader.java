@@ -1,7 +1,6 @@
 package dsparq.load;
 
 import java.util.ArrayList;
-import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Random;
 
@@ -40,7 +39,7 @@ public class DummyTripleLoader {
 	}
 	
 	public void insertDummyTriples() {
-		GregorianCalendar start = new GregorianCalendar();
+		long startTime = System.nanoTime();
 		int NUM_STAR_SCHEMA_TRIPLES = 4000000;
 		Random random = new Random();
 		List<BasicDBObject> predObjList = new ArrayList<BasicDBObject>();
@@ -73,7 +72,7 @@ public class DummyTripleLoader {
 		if(!docList.isEmpty())
 			collection.insert(docList);
 		mongoClient.close();
-		Util.getElapsedTime(start);
+		Util.getElapsedTime(startTime);
 	}
 	
 	public static void main(String[] args) {

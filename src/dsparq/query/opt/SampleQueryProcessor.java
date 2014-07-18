@@ -1,7 +1,6 @@
 package dsparq.query.opt;
 
 import java.util.ArrayList;
-import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -16,6 +15,7 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
 
 import dsparq.misc.Constants;
 import dsparq.util.Util;
@@ -33,7 +33,7 @@ public class SampleQueryProcessor {
 		threadPool = Executors.newFixedThreadPool(32);
 		try {
 //			mongos = new Mongo("nimbus2", 27017);
-			localMongo = new Mongo("nimbus5", 10000);
+			localMongo = new MongoClient("nimbus5", 10000);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -66,9 +66,9 @@ public class SampleQueryProcessor {
 	}
 	
 	public static void main(String[] args) throws Exception {
-		GregorianCalendar start = new GregorianCalendar();
+		long startTime = System.nanoTime();
 		new SampleQueryProcessor().processQuery();
-		Util.getElapsedTime(start);
+		Util.getElapsedTime(startTime);
 	}
 	
 	class StarQueryProcessor2 extends Thread {

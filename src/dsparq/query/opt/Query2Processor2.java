@@ -1,8 +1,6 @@
 package dsparq.query.opt;
 
 import java.util.Collection;
-import java.util.Comparator;
-import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -20,11 +18,10 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
 
 import dsparq.misc.Constants;
 import dsparq.query.QueryVisitor;
-import dsparq.query.TripleTable;
-import dsparq.util.BPlusTree;
 import dsparq.util.Util;
 
 /**
@@ -40,12 +37,12 @@ public class Query2Processor2 {
 	protected DBCollection tripleCollection; 
 	protected DBCollection idValCollection;
 	protected DBCollection eidValCollection;
-	private GregorianCalendar start;
+	private long startTime;
 	
 	public Query2Processor2() {
 		try {
-			mongoS = new Mongo("nimbus2", 27017);
-			localMongo = new Mongo(Constants.MONGO_LOCAL_HOST, 10000);
+			mongoS = new MongoClient("nimbus2", 27017);
+			localMongo = new MongoClient(Constants.MONGO_LOCAL_HOST, 10000);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -57,8 +54,8 @@ public class Query2Processor2 {
 	}
 
 	public void processQuery(String query) throws Exception {
-		start = new GregorianCalendar();
-		GregorianCalendar start1 = new GregorianCalendar();
+		startTime = System.nanoTime();
+		long start1 = System.nanoTime();
 		Query queryObj = QueryFactory.create(query);
 		QueryVisitor queryVisitor = new QueryVisitor(queryObj);
 		Op op = Algebra.compile(queryObj);
@@ -108,7 +105,7 @@ public class Query2Processor2 {
 	private void fetchDataForBGP4(Set<Long> prevResult1, 
 			Set<Long> prevResult2, String subVar, String objVar, 
 			Long predicateID) {
-		GregorianCalendar start4 = new GregorianCalendar();
+		long start4 = System.nanoTime();
 		Set<Long> queryResults = new HashSet<Long>();
 		BasicDBObject queryDoc = new BasicDBObject();
 		queryDoc.put(Constants.FIELD_TRIPLE_PREDICATE, predicateID);
@@ -125,12 +122,12 @@ public class Query2Processor2 {
 		}
 		System.out.println("first join done: " + numResults1 + 
 				" Set size: " + queryResults.size());
-		Util.getElapsedTime(start4);
-		start = new GregorianCalendar();
+		System.out.println(Util.getElapsedTime(start4));
+		startTime = System.nanoTime();
 		
 		queryResults.retainAll(prevResult2);
 		System.out.println("Second join done, results: " + queryResults.size());
-		Util.getElapsedTime(start);
+		System.out.println(Util.getElapsedTime(startTime));
 	}
 	
 	private Set<Long> fetchDataForBGP(String subjectVar, 

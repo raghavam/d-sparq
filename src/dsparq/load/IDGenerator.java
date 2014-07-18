@@ -1,7 +1,6 @@
 package dsparq.load;
 
 import java.net.InetAddress;
-import java.util.GregorianCalendar;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.CommandResult;
@@ -93,8 +92,9 @@ public class IDGenerator {
 	
 	
 	public static void main(String[] args) throws Exception {
-		GregorianCalendar start = new GregorianCalendar();
+		long startTime = System.nanoTime();
 		new IDGenerator().generateIDs();
-		System.out.println("Time taken (secs): " + Util.getElapsedTime(start));
+		System.out.println("Time taken (secs): " + 
+				Util.getElapsedTime(startTime));
 	}
 }

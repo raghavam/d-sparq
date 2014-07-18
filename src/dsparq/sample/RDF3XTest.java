@@ -2,12 +2,8 @@ package dsparq.sample;
 
 import java.io.File;
 import java.sql.DriverManager;
-import java.util.GregorianCalendar;
 import java.util.Scanner;
 
-
-import de.mpii.rdf3x.Connection;
-import de.mpii.rdf3x.Statement;
 import dsparq.util.Util;
 
 public class RDF3XTest {
@@ -17,7 +13,7 @@ public class RDF3XTest {
 		java.sql.Statement s = c.createStatement();
 	    java.sql.ResultSet r = s.executeQuery(query);
 
-	    java.sql.ResultSetMetaData rm=r.getMetaData();
+//	    java.sql.ResultSetMetaData rm=r.getMetaData();
 /*	      
 	      for (int index=0;index<rm.getColumnCount();index++) {
 	         if (index>0) System.out.print(' ');
@@ -47,7 +43,7 @@ public class RDF3XTest {
 	         System.out.println("provide db and query");
 	         return;
 	    }
-		GregorianCalendar start = new GregorianCalendar();
+		long startTime = System.nanoTime();
 		File queryFile = new File(args[1]);
 		Scanner scanner = new Scanner(queryFile);
 		StringBuilder query = new StringBuilder();
@@ -55,8 +51,8 @@ public class RDF3XTest {
 			query.append(scanner.nextLine());
 		scanner.close();
 		new RDF3XTest().runQuery(args[0], query.toString());
-		double secs = Util.getElapsedTime(start);
-		System.out.println("Total Secs: " + secs);
+		double secs = Util.getElapsedTime(startTime);
+		System.out.println("Time taken (secs): " + secs);
 	}
 
 }
