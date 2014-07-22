@@ -123,11 +123,11 @@ public class BiConFinder {
 							NumericalTriplePattern triple = 
 								new NumericalTriplePattern(
 										e.getEdgeSource(), e, 
-										e.getEdgeTarget());							
+										e.getEdgeTarget());	
+							pattern = new PipelinePattern();
+							((PipelinePattern)pattern).setTriple(triple);
 							if(directedQueryGraph.outDegreeOf(
 									e.getEdgeTarget()) > 0) {
-								pattern = new PipelinePattern();
-								((PipelinePattern)pattern).setTriple(triple);
 								QueryPattern connectingPattern = 
 									vertexPatternMap.remove(
 											e.getEdgeTarget().getLabel());
@@ -139,8 +139,8 @@ public class BiConFinder {
 												e.getEdgeTarget().getLabel());
 								}
 							}
-							else
-								pattern = triple;						
+//							else
+//								pattern = triple;						
 						}
 						else if(outGoingEdges.size() >= 2) {
 							pattern = new StarPattern();
