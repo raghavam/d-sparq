@@ -124,7 +124,7 @@ public class ThreadedQueryExecutor2 extends PatternHandler {
 				// wait for the tasks to complete
 				boolean isTerminated = threadPool.awaitTermination(
 						5, TimeUnit.SECONDS);
-				System.out.println("isTerminated: " + isTerminated);
+//				System.out.println("isTerminated: " + isTerminated);
 			}
 		}
 		finally {
@@ -157,7 +157,10 @@ public class ThreadedQueryExecutor2 extends PatternHandler {
 		DBCursor cursor; 
 //		System.out.println("Limiting results to " + LIMIT_RESULTS + 
 //				" for testing.....");
-//		System.out.println(queryDoc.toString());
+//		if(queryDoc != null)
+//			System.out.println("queryDoc: " + queryDoc.toString());
+//		else
+//			System.out.println("queryDoc is null");
 		cursor = (queryDoc == null) ? starSchemaCollection.find() : 
 			starSchemaCollection.find(queryDoc);
 		
@@ -211,13 +214,13 @@ public class ThreadedQueryExecutor2 extends PatternHandler {
 				resultCount++;
 			}		
 		}
-		System.out.println("Checking queues for remaining items...");
+//		System.out.println("Checking queues for remaining items...");
 		//Handle any remaining items in the queues
 		Collection<QueueHandler2> queueHandlers = dependentQueueMap.values();
 		for(QueueHandler2 queueHandler : queueHandlers)
 			queueHandler.addToQueue(null);
-		System.out.println("#Docs: " + docCount + 
-				"   Total results: " + resultCount);
+//		System.out.println("#Docs: " + docCount);
+		System.out.println("Results: " + resultCount);
 		cursor.close();
 //		writer.close();
 	}
