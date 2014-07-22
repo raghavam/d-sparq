@@ -110,14 +110,14 @@ Indexes are also created in this step (PartitionedTripleLoader does that).
 
 ##### Run the queries
 
-1. Run this on each node of the cluster. Use ```java -Xms12g -Xmx12g -cp dist/d-sparq.jar dsparq.query.opt.ThreadedQueryExecutor2 <query_file> <number_of_times_to_run>```.
+1. Run this on each node of the cluster. Use ```java -Xms12g -Xmx12g -cp dist/d-sparq.jar dsparq.query.opt.ThreadedQueryExecutor2 <queries/q?> <number_of_times_to_run>```.
 The input query file should contain only one query. Query should be written without using any line breaks.
 SP2 benchmark tool is used to generate data and the modified queries are also provided. Since only 
-basic graph patterns are supported, some of the queries from SP2 are modified. Note that, only the 
-total results are printed, not the individual results. This is sufficient for our purpose.
+basic graph patterns are supported, some of the queries from SP2 are modified. Test queries are 
+provided in the queries folder. Note that, only the total results are printed, not the individual results. This is sufficient for our purpose.
 2. For running queries on RDF-3X, 
   1. put rdf3x-0.3.7/bin in the PATH variable. 
-  2. Use ```time java -Xms12g -Xms12g -cp dist/d-sparq.jar:src dsparq.sample.RDF3XTest <path_to_rdfdb> <query_file>```.
+  2. Use ```time java -Xms12g -Xms12g -cp dist/d-sparq.jar:src dsparq.sample.RDF3XTest <path_to_rdfdb> <queries/q?>```.
 
 
 
