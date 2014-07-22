@@ -1,1 +1,1 @@
-SELECT ?ee WHERE { ?publication <http://www.w3.org/2000/01/rdf-schema#seeAlso> ?ee . }
+SELECT ?publication ?predicate ?value WHERE { ?publication <http://www.w3.org/2000/01/rdf-schema#seeAlso> ?ee . ?publication ?predicate ?value . }
