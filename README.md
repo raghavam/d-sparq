@@ -33,9 +33,9 @@ MongoDB. Instructions are given here for convenience.
   2. Use ```numactl``` while starting MongoDB. ```numactl --interleave=all bin/mongod <mongo_params>```.
   
 The steps to set up sharded cluster are given here for convenience. For the following commands, create appropriate folder structure for dbpath.
-  1. Start the config server database instances. One instance of this is minimally sufficient. Use ```numactl --interleave=all bin/mongod --configsvr --dbpath db/rdfdb/configdb --port 20000 > logs/configdb.log &```. 
-  2. Start the mongos instances. One instance of this is minimally sufficient. Use ```numactl --interleave=all bin/mongos --configdb <config_server_host>:20000 > logs/mongos.log &```.
-  3. Start the shards in the cluster. Do this on all the nodes in the cluster. Use ```numactl --interleave=all bin/mongod --shardsvr --dbpath db/rdfdb --port 10000 > logs/shard.log &```.
+  1. Start the config server database instances. One instance of this is minimally sufficient. Use ```numactl --interleave=all bin/mongod --fork --configsvr --dbpath db/rdfdb/configdb --port 20000 --logpath logs/configdb.log```. 
+  2. Start the mongos instances. One instance of this is minimally sufficient. Use ```numactl --interleave=all bin/mongos --fork --configdb <config_server_host>:20000 --logpath logs/mongos.log```.
+  3. Start the shards in the cluster. Do this on all the nodes in the cluster. Use ```numactl --interleave=all bin/mongod --fork --shardsvr --dbpath db/rdfdb --port 10000 --logpath logs/shard.log```.
   4. Add shards to the cluster. Using mongo shell and connect to mongos instance. At the prompt run the
   following commands: a) ```use admin``` b) ```db.runCommand( { addshard : "<shard_host>:<shard_port>" } );``` Run
   this for all shards i.e., put in the information for all the shards. c) Enable sharding for the 
