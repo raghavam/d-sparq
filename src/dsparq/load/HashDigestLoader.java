@@ -49,7 +49,11 @@ public class HashDigestLoader {
 					BasicDBObject doc = new BasicDBObject();
 					doc.put(Constants.FIELD_HASH_VALUE, splits[0]);
 					doc.put(Constants.FIELD_TYPEID, Long.parseLong(splits[1]));
-					doc.put(Constants.FIELD_STR_VALUE, splits[2]);
+					
+					//not saving the string values here since they take lot of 
+					//space. Convert queries to numerical equivalents and compare.
+//					doc.put(Constants.FIELD_STR_VALUE, splits[2]);
+					
 					docList.add(doc);
 					if(docList.size()%Constants.CONTAINER_CAPACITY == 0) {
 						idValCollection.insert(docList);
