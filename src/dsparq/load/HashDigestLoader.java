@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.mongodb.BasicDBObject;
+import com.mongodb.BulkWriteOperation;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
@@ -39,11 +40,12 @@ public class HashDigestLoader {
 			DB db = mongo.getDB(Constants.MONGO_RDF_DB);
 			DBCollection idValCollection = db.getCollection(
 					Constants.MONGO_IDVAL_COLLECTION);
+			BulkWriteOperation bulkInsert = 
+					idValCollection.initializeUnorderedBulkOperation();
 			String line;
 			for(File file : files) {
 				FileReader fileReader = new FileReader(file);
 				BufferedReader bufferedReader = new BufferedReader(fileReader);
-				List<DBObject> docList = new ArrayList<DBObject>();
 				while((line = bufferedReader.readLine()) != null) {
 					String[] splits = line.split(Constants.REGEX_DELIMITER);
 					BasicDBObject doc = new BasicDBObject();
@@ -54,16 +56,9 @@ public class HashDigestLoader {
 					//space. Convert queries to numerical equivalents and compare.
 //					doc.put(Constants.FIELD_STR_VALUE, splits[2]);
 					
-					docList.add(doc);
-					if(docList.size()%Constants.CONTAINER_CAPACITY == 0) {
-						idValCollection.insert(docList);
-						docList.clear();
-					}
+					bulkInsert.insert(doc);
 				}
-				if(!docList.isEmpty()) {
-					idValCollection.insert(docList);
-					docList.clear();
-				}
+				bulkInsert.execute();
 				bufferedReader.close();
 				fileReader.close();
 				System.out.println("Done with " + file.getName());
