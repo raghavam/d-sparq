@@ -2,15 +2,12 @@ package dsparq.load;
 
 import java.io.IOException;
 import java.io.StringReader;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.FileInputFormat;
@@ -38,9 +35,6 @@ import com.mongodb.DBObject;
 import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
 
-import redis.clients.jedis.JedisShardInfo;
-import redis.clients.jedis.ShardedJedis;
-import redis.clients.util.Hashing;
 import dsparq.misc.Constants;
 import dsparq.misc.PropertyFileHandler;
 import dsparq.util.LRUCache;
@@ -76,7 +70,8 @@ public class KVFileCreatorMR extends Configured implements Tool {
 				Literal literal = (Literal) nodes[2];
 				StringBuilder sb = new StringBuilder();
 				sb.append("\"").append(literal.getData()).append("\"");
-				sb.append("^^").append(literal.getDatatype().toString());
+				if(literal.getDatatype() != null)
+					sb.append("^^").append(literal.getDatatype().toString());
 				object = sb.toString();
 			}
 			else
