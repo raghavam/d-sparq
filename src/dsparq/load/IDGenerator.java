@@ -27,12 +27,15 @@ public class IDGenerator {
 		mongo = new MongoClient("localhost", 
 				propertyFileHandler.getShardPort());
 		DB localDB = mongo.getDB(Constants.MONGO_RDF_DB);
-//		DBCollection idValCollection = db.getCollection(
-//				Constants.MONGO_IDVAL_COLLECTION);
-//		DBCollection statsCollection = db.getCollection(
-//				Constants.MONGO_STATS_COLLECTION);
-//		DBObject statsDoc = statsCollection.findOne();
-//		long count = (Long) statsDoc.get(Constants.TOTAL_DOCS);
+		
+		/* In general, using a script is considered a bad choice since it 
+		 * blocks the server. But this was done to avoid round trips i.e.,
+		 * fetch data to the client side, make changes and push it back to
+		 * the server. Moreover, this is a one time task. For each document, 
+		 * if the typeID is 1 (not an rdf type), a sequential number is 
+		 * assigned else some dummy number is assigned which doesn't break 
+		 * the sequence.
+		*/ 
 		
 		String insertNumIDScript = 
 				"function(ip) { " +
