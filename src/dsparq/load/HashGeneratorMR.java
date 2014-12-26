@@ -61,10 +61,6 @@ public class HashGeneratorMR extends Configured implements Tool {
 			StringReader reader = new StringReader(key.toString());
 			NxParser nxParser = new NxParser(reader);
 			Node[] nodes = nxParser.next();
-			StringBuilder strBuilder = new StringBuilder();
-			strBuilder.append(nodes[1].toString()).
-						append(Constants.TRIPLE_TERM_DELIMITER).
-						append(nodes[2].toString());
 			output.collect(new Text(nodes[0].toString()), new LongWritable(1)); 
 			output.collect(new Text(nodes[1].toString()), new LongWritable(1)); 
 			if(nodes[1].toString().equals(
@@ -78,7 +74,9 @@ public class HashGeneratorMR extends Configured implements Tool {
 					Literal literal = (Literal) nodes[2];
 					StringBuilder sb = new StringBuilder();
 					sb.append("\"").append(literal.getData()).append("\"");
-					sb.append("^^").append(literal.getDatatype().toString());
+					if (literal.getDatatype() != null)
+						sb.append("^^").append(
+								literal.getDatatype().toString());
 					output.collect(new Text(sb.toString()), 
 							new LongWritable(1));
 				}
