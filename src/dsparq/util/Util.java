@@ -1,7 +1,6 @@
 package dsparq.util;
 
 import java.security.MessageDigest;
-import java.util.GregorianCalendar;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
