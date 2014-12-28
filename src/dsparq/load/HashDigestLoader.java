@@ -37,10 +37,11 @@ public class HashDigestLoader {
 			DB db = mongo.getDB(Constants.MONGO_RDF_DB);
 			DBCollection idValCollection = db.getCollection(
 					Constants.MONGO_IDVAL_COLLECTION);
-			BulkWriteOperation bulkInsert = 
-					idValCollection.initializeUnorderedBulkOperation();
 			String line;
 			for(File file : files) {
+				//bulk operation has to be reinitialized after execute()
+				BulkWriteOperation bulkInsert = 
+						idValCollection.initializeUnorderedBulkOperation();
 				FileReader fileReader = new FileReader(file);
 				BufferedReader bufferedReader = new BufferedReader(fileReader);
 				while((line = bufferedReader.readLine()) != null) {
