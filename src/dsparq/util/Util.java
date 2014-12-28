@@ -32,6 +32,11 @@ public class Util {
 		return hexStr.toString();
 	}	
 	
+	/**
+	 * returns elapsed time from the given time in seconds
+	 * @param startTimeNano start time in nano seconds
+	 * @return
+	 */
 	public static double getElapsedTime(long startTimeNano) {
 		long endTimeNano = System.nanoTime();		
 		double diffSecs = (endTimeNano - startTimeNano)/(double)1000000000;
