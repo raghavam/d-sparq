@@ -9,6 +9,7 @@ import java.util.Scanner;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
+import com.mongodb.BulkWriteOperation;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
@@ -17,6 +18,7 @@ import com.mongodb.MongoClient;
 
 import dsparq.misc.Constants;
 import dsparq.misc.PropertyFileHandler;
+import dsparq.util.Util;
 
 /**
  * This class takes a set of files containing triples in
@@ -40,13 +42,15 @@ public class SplitTripleLoader {
 				Constants.MONGO_STAR_SCHEMA);
 		//deleting the existing schema
 		starSchemaCollection.drop();
-		List<DBObject> docsToInsert = new ArrayList<DBObject>();
 		long previousSubjectID = -1;
 		long subjectID = -1;
 		boolean firstLine = true;
 		List<BasicDBObject> predObjList = new ArrayList<BasicDBObject>();
 		long startTime = System.nanoTime();
 		for(File tripleFile : allFiles) {
+			//bulk operation has to be reinitialized after execute()
+			BulkWriteOperation bulkInsert = 
+					starSchemaCollection.initializeUnorderedBulkOperation();
 			BufferedInputStream inputStream = new BufferedInputStream(
 					new FileInputStream(tripleFile));
 			Scanner scanner = new Scanner(inputStream, "UTF-8");
@@ -65,10 +69,7 @@ public class SplitTripleLoader {
 						DBObject doc = new BasicDBObject();
 						doc.put(Constants.FIELD_TRIPLE_SUBJECT, previousSubjectID);
 						doc.put(Constants.FIELD_TRIPLE_PRED_OBJ, predObjList);
-						docsToInsert.add(doc);
-						// this is the bulk insert in MongoDB java
-						starSchemaCollection.insert(docsToInsert);
-						docsToInsert.clear();
+						bulkInsert.insert(doc);
 						previousSubjectID = subjectID;
 						predObjList = new ArrayList<BasicDBObject>();
 					}
@@ -88,24 +89,21 @@ public class SplitTripleLoader {
 			DBObject doc = new BasicDBObject();
 			doc.put(Constants.FIELD_TRIPLE_SUBJECT, subjectID);
 			doc.put(Constants.FIELD_TRIPLE_PRED_OBJ, predObjList);
-			docsToInsert.add(doc);
-			starSchemaCollection.insert(docsToInsert);
-			docsToInsert.clear();
+			bulkInsert.insert(doc);
+			bulkInsert.execute();
 			inputStream.close();
 			scanner.close();
 		}
-		long endTime = System.nanoTime();
-		double diff = (endTime - startTime)/(double)1000000000;
-		System.out.println("All triples inserted in (secs): " + diff);
+		System.out.println("All triples inserted in (secs): " + 
+				Util.getElapsedTime(startTime));
 		System.out.println("Creating indexes now...");
 		startTime = System.nanoTime();
 		DBObject predObjIndex = BasicDBObjectBuilder.start().
 				add(Constants.FIELD_TRIPLE_PREDICATE, 1).
 				add(Constants.FIELD_TRIPLE_OBJECT, 1).get();
-		starSchemaCollection.ensureIndex(predObjIndex);
-		endTime = System.nanoTime();
-		diff = (endTime - startTime)/(double)1000000000;
-		System.out.println("Indexes created in (secs): " + diff);
+		starSchemaCollection.createIndex(predObjIndex);
+		System.out.println("Indexes created in (secs): " + 
+				Util.getElapsedTime(startTime));
 		mongo.close();
 	}
 	
