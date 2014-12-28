@@ -1,9 +1,9 @@
 package dsparq.load;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import com.mongodb.BasicDBObject;
+import com.mongodb.BulkWriteOperation;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
@@ -13,6 +13,7 @@ import com.mongodb.MongoClient;
 import dsparq.misc.Constants;
 import dsparq.misc.HostInfo;
 import dsparq.misc.PropertyFileHandler;
+import dsparq.util.Util;
 
 /**
  * Generates the count of the number of documents in which each
@@ -52,8 +53,8 @@ public class PredicateSelectivity {
 					Constants.MONGO_PREDICATE_SELECTIVITY);
 			List<Long> predList = (List<Long>)starSchemaCollection.distinct(
 					predicate);
-			List<DBObject> selectivityList = 
-					new ArrayList<DBObject>(predList.size());
+			BulkWriteOperation bulkInsert = 
+				predicateSelectivityCollection.initializeUnorderedBulkOperation();
 			for(Long predID : predList) {
 				DBObject predDoc = new BasicDBObject(predicate, 
 						predID);
@@ -61,9 +62,9 @@ public class PredicateSelectivity {
 				DBObject selectivityDoc = new BasicDBObject();
 				selectivityDoc.put("_id", predID);
 				selectivityDoc.put(Constants.FIELD_PRED_SELECTIVITY, selectivity);
-				selectivityList.add(selectivityDoc);
+				bulkInsert.insert(selectivityDoc);
 			}
-			predicateSelectivityCollection.insert(selectivityList);
+			bulkInsert.execute();
 		}
 		finally {
 			if(mongo != null)
@@ -75,9 +76,7 @@ public class PredicateSelectivity {
 		System.out.println("Generating predicate selectivity...");
 		long startTime = System.nanoTime();
 		new PredicateSelectivity().generatePredicateSelectivity();
-		long endTime = System.nanoTime();
-		double diff = (endTime - startTime)/(double)1000000000;
 		System.out.println("Time taken to create predicate " +
-				"selectivity (secs): " + diff);
+				"selectivity (secs): " + Util.getElapsedTime(startTime));
 	}
 }
