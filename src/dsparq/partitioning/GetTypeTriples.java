@@ -1,18 +1,7 @@
 
-/**
- * Code given by Jiewen Huang - PhD student at 
- * Yale University. Code written for SW-Store.
- * 
- * Code modified by Raghava Mutharaju. 
- */
-
 package dsparq.partitioning;
 
-
-
 import java.io.IOException;
-import java.util.Map;
-import java.util.Set;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
@@ -32,12 +21,16 @@ import org.apache.hadoop.mapred.RunningJob;
 import org.apache.hadoop.mapred.lib.MultipleTextOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
-import org.apache.log4j.Logger;
 
-import redis.clients.jedis.Jedis;
-
+import com.mongodb.BasicDBObject;
+import com.mongodb.DB;
+import com.mongodb.DBCollection;
+import com.mongodb.DBObject;
+import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
 
 import dsparq.misc.Constants;
+import dsparq.misc.HostInfo;
 import dsparq.misc.PropertyFileHandler;
 import dsparq.util.Util;
         
@@ -45,8 +38,10 @@ import dsparq.util.Util;
  * This class is used to separate typed triples from the given set
  * of triples.
  * 
- * @author Jiewen Huang
- * Modified by Raghava
+ * @author Jiewen Huang  - PhD student at 
+ * Yale University. Code written for SW-Store.
+ * 
+ * Modified by Raghava Mutharaju
  *
  */
 public class GetTypeTriples extends Configured implements Tool{
@@ -65,27 +60,11 @@ public class GetTypeTriples extends Configured implements Tool{
 	    public void map(Text key, Text value, OutputCollector<Text, Text> output, 
 	    		Reporter reporter) throws IOException 
 	    {
-/*	    	
-	        String line = key.toString();
-	        
-	        String[] tokenizer = line.split(Constants.REGEX_DELIMITER);
-	        
-	        StringBuilder triple = new StringBuilder();
-	        triple.append(tokenizer[Constants.POSITION_SUBJECT]).append(Constants.TRIPLE_TERM_DELIMITER). 
-			append(tokenizer[Constants.POSITION_PREDICATE]).append(Constants.TRIPLE_TERM_DELIMITER).
-			append(tokenizer[Constants.POSITION_OBJECT]);
-	        
-	        if (tokenizer[Constants.POSITION_PREDICATE].
-	        		equals(predicateTypeID))	        	
-	        	output.collect(new Text(triple.toString()), 
-	        			new Text());
-	        else
-	        	output.collect(new Text(triple.toString()), new Text());
-*/
 	    	output.collect(key, value);
 	    } 
  
-		private static class MultiFileOutput extends MultipleTextOutputFormat<Text, Text> {
+		private static class MultiFileOutput 
+			extends MultipleTextOutputFormat<Text, Text> {
 		     protected String generateFileNameForKeyValue(Text key, 
 		    		 Text value, String name) {
 		    	 
@@ -122,45 +101,56 @@ public class GetTypeTriples extends Configured implements Tool{
 		Configuration fconf = new Configuration();
 		FileSystem fs = FileSystem.get(fconf);
 
-		if (fs.exists(outputPath)) {
+		if (fs.exists(outputPath)) 
 			fs.delete(outputPath, true);
-		}
 			
-		JobConf conf1 = new JobConf(this.getClass());
-		conf1.setJobName("GetTypeTriples");
-		Jedis jedis = new Jedis("nimbus2", 6479);
-		jedis.select(1);
-		String type = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
-		String digest = Util.generateMessageDigest(type);
-		String typeID = jedis.hget(digest, "id");
-		jedis.disconnect();
-		conf1.set("typeID", typeID);
+		JobConf jobConf = new JobConf(this.getClass());
+		jobConf.setJobName("GetTypeTriples");
+		//get the ID of rdf:type and make it available to MR job
+		PropertyFileHandler propertyFileHandler = 
+				PropertyFileHandler.getInstance();
+		HostInfo routerHostInfo = propertyFileHandler.getMongoRouterHostInfo();
+		Mongo mongoRouter = new MongoClient(routerHostInfo.getHost(), 
+				routerHostInfo.getPort());
+		DB db = mongoRouter.getDB(Constants.MONGO_RDF_DB);
+		DBCollection idValCollection = db.getCollection(
+				Constants.MONGO_IDVAL_COLLECTION);
+		String typeID = getPredicateIDFromDB(idValCollection);
+		mongoRouter.close();
+		jobConf.set("typeID", typeID);
 		
-		Path p1Output = new Path(outputDir + "");
+		FileOutputFormat.setOutputPath(jobConf, outputPath);		
+		jobConf.setInputFormat(KeyValueTextInputFormat.class);
+		jobConf.setOutputFormat(Map.MultiFileOutput.class);			
+		jobConf.setOutputKeyClass(Text.class);
+		jobConf.setOutputValueClass(Text.class);		
+		FileInputFormat.setInputPaths(jobConf, new Path(triples));
+		jobConf.setMapperClass(Map.class);
+//		jobConf.setNumMapTasks(propertyFileHandler.getShardCount());
+		jobConf.setNumReduceTasks(0);
 		
-		FileOutputFormat.setOutputPath(conf1, p1Output);
-		
-		conf1.setInputFormat(KeyValueTextInputFormat.class);
-		conf1.setOutputFormat(Map.MultiFileOutput.class);	
-		
-		conf1.setOutputKeyClass(Text.class);
-		conf1.setOutputValueClass(Text.class);
-		
-		FileInputFormat.setInputPaths(conf1, new Path(triples));
-
-		conf1.setMapperClass(Map.class);
-//		conf1.setNumMapTasks(propertyFileHandler.getShardCount());
-		conf1.setNumReduceTasks(0);
-		
-		RunningJob job1 = JobClient.runJob(conf1);
-
-		if (job1.isSuccessful()) {
-
-		} else {
+		RunningJob job = JobClient.runJob(jobConf);
+		if (!job.isSuccessful())
 			System.out.println("FAILED!!!");
-		}
 
 		return 0;
+	}
+	
+	private String getPredicateIDFromDB(DBCollection idValCollection) 
+			throws Exception {
+		String digest = Util.generateMessageDigest(Constants.RDF_TYPE_URI);
+		BasicDBObject queryDoc = new BasicDBObject();
+		queryDoc.put(Constants.FIELD_HASH_VALUE, digest);
+		BasicDBObject projectionDoc = new BasicDBObject();
+		projectionDoc.put(Constants.FIELD_NUMID, 1);
+		DBObject resultDoc = idValCollection.findOne(queryDoc, 
+				projectionDoc);
+		if(resultDoc == null)
+			throw new Exception("ID not present for rdf:type");
+		Double numID = (Double) resultDoc.get(Constants.FIELD_NUMID);
+		if(numID == null)
+			throw new Exception("numID is null for " + digest);
+		return numID.toString();
 	}
    
 }
