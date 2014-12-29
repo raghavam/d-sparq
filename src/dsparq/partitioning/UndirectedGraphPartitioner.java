@@ -31,14 +31,15 @@ import org.apache.log4j.Logger;
 import dsparq.misc.Constants;
 
 /**
- * This class is used to generate input file for METIS
+ * This class is used to generate input file (adjacency list) for METIS
  * 
  * @author Raghava
  *
  */
 public class UndirectedGraphPartitioner extends Configured implements Tool {
 
-	private static final Logger log = Logger.getLogger(UndirectedGraphPartitioner.class);  
+	private static final Logger log = Logger.getLogger(
+			UndirectedGraphPartitioner.class);  
 	
 	private static class Map extends MapReduceBase implements 
 			Mapper<Text, Text, LongWritable, Text> {
@@ -51,9 +52,11 @@ public class UndirectedGraphPartitioner extends Configured implements Tool {
 			String line = key.toString();	        
 	        String[] tokenizer = line.split(Constants.REGEX_DELIMITER);
 	        // undirected graph, so consider edges in both directions
-	        output.collect(new LongWritable(Long.parseLong(tokenizer[Constants.POSITION_SUBJECT])), 
+	        output.collect(new LongWritable(Long.parseLong(
+	        		tokenizer[Constants.POSITION_SUBJECT])), 
 	        		new Text(tokenizer[Constants.POSITION_OBJECT]));
-	        output.collect(new LongWritable(Long.parseLong(tokenizer[Constants.POSITION_OBJECT])), 
+	        output.collect(new LongWritable(Long.parseLong(
+	        		tokenizer[Constants.POSITION_OBJECT])), 
 	        		new Text(tokenizer[Constants.POSITION_SUBJECT]));
 		}
 	}
@@ -101,7 +104,6 @@ public class UndirectedGraphPartitioner extends Configured implements Tool {
 			StringBuilder adjVertexStr = new StringBuilder();
 			reporter.progress();
 			long itcount= 0;
-			// check whether there are any duplicates in values
 			while(values.hasNext()) {
 				adjVertexStr.append(values.next().toString()).append(" ");
 				itcount++;
@@ -110,8 +112,10 @@ public class UndirectedGraphPartitioner extends Configured implements Tool {
 			reporter.progress();
 			log.info("Size of iterator: " + itcount);
 //			output.collect(key, new Text(adjVertexStr.toString()));
-			multipleOutputs.getCollector("vertex", reporter).collect(key, new Text(""));
-			multipleOutputs.getCollector("adjvertex", reporter).collect(adjVertexStr, new Text(""));
+			multipleOutputs.getCollector("vertex", reporter).collect(
+					key, new Text());
+			multipleOutputs.getCollector("adjvertex", reporter).collect(
+					adjVertexStr, new Text());
 		}
 		
 		@Override
@@ -124,7 +128,7 @@ public class UndirectedGraphPartitioner extends Configured implements Tool {
 	public int run(String[] args) throws Exception {
 		if (args.length != 2) {
 			String msg = "Incorrect arguments -- requires 2 arguments.\n\t " +
-					"1) Formatted Triples file \n\t" +
+					"1) Key-Value formatted Triples file \n\t" +
 					"2) path to output directory which would hold " +
 						"the input file for METIS \n\t";
 			throw new RuntimeException(msg + this.getClass());
@@ -148,49 +152,36 @@ public class UndirectedGraphPartitioner extends Configured implements Tool {
 		log.info("mapred.child.java.opts: " + config.get("mapred.child.java.opts"));
 		config.set("mapred.reduce.child.java.opts", "-Xmx512M");
 		config.set("mapred.child.java.opts", "-Xmx512M");
-		JobConf conf1 = new JobConf(config, this.getClass());
-		conf1.setJobName("UndirectedGraphPartitioner");
+		JobConf jobConf = new JobConf(config, this.getClass());
+		jobConf.setJobName("UndirectedGraphPartitioner");
 		
-		Path p1Output = new Path(outputDir + "");
-		
-		FileOutputFormat.setOutputPath(conf1, p1Output);
-		
-		conf1.setInputFormat(KeyValueTextInputFormat.class);
-		conf1.setOutputFormat(TextOutputFormat.class);	
-		
-		conf1.setOutputKeyClass(Text.class);
-		conf1.setOutputValueClass(Text.class);
-		
-		FileInputFormat.setInputPaths(conf1, new Path(triples));
-
-		conf1.setMapperClass(Map.class);
-		conf1.setReducerClass(Reduce.class);
-//		conf1.setCombinerClass(Combiner.class);
-		conf1.setMapOutputKeyClass(LongWritable.class);
-		conf1.setMapOutputValueClass(Text.class);
+		FileOutputFormat.setOutputPath(jobConf, outputPath);		
+		jobConf.setInputFormat(KeyValueTextInputFormat.class);
+		jobConf.setOutputFormat(TextOutputFormat.class);			
+		jobConf.setOutputKeyClass(Text.class);
+		jobConf.setOutputValueClass(Text.class);		
+		FileInputFormat.setInputPaths(jobConf, new Path(triples));
+		jobConf.setMapperClass(Map.class);
+		jobConf.setReducerClass(Reduce.class);
+//		jobConf.setCombinerClass(Combiner.class);
+		jobConf.setMapOutputKeyClass(LongWritable.class);
+		jobConf.setMapOutputValueClass(Text.class);
 /*		
 		PropertyFileHandler propertyFileHandler = 
 			PropertyFileHandler.getInstance();
 		int partitions = propertyFileHandler.getShardCount();
-		conf1.setNumMapTasks(partitions);
+		jobConf.setNumMapTasks(partitions);
 */		
 		// setting reduce to 1 so that output would be in one file
 		// METIS input order should be same in vertex & adjvertex files.
-		conf1.setNumReduceTasks(1);
-		
-		MultipleOutputs.addNamedOutput(conf1, "vertex", 
+		jobConf.setNumReduceTasks(1);		
+		MultipleOutputs.addNamedOutput(jobConf, "vertex", 
 				TextOutputFormat.class, Text.class, Text.class);
-		MultipleOutputs.addNamedOutput(conf1, "adjvertex", 
+		MultipleOutputs.addNamedOutput(jobConf, "adjvertex", 
 				TextOutputFormat.class, Text.class, Text.class);
-		
-		RunningJob job1 = JobClient.runJob(conf1);
-
-		if (job1.isSuccessful()) {
-
-		} else {
+		RunningJob job = JobClient.runJob(jobConf);
+		if (!job.isSuccessful()) 
 			System.out.println("FAILED!!!");
-		}
-		
 		return 0;
 	}
 	
