@@ -47,12 +47,11 @@ public class TripleSplitter extends Configured implements Tool {
 		public void map(Text key, Text value, 
 				OutputCollector<LongWritable, LongWritable> output,
 				Reporter reporter) throws IOException {
-			// expected input format: vertexID partitionID
+			// expected input format: vertexID	partitionID
 			
-			// key itself contains vertexID and partitionID, value is empty
-			String[] tokens = key.toString().split("\\s");
-			output.collect(new LongWritable(Long.parseLong(tokens[1].toString())), 
-					new LongWritable(Long.parseLong(tokens[0].toString())));
+			// key is vertexID and value is partitionID
+			output.collect(new LongWritable(Long.parseLong(key.toString())), 
+					new LongWritable(Long.parseLong(value.toString())));
 		}
 	}
 	
