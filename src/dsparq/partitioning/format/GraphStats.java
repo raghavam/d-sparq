@@ -7,8 +7,8 @@ import java.io.FileReader;
 /**
  * This class is used to find out the count of
  * edges from the output of hadoop job which generates
- * input file for metis. This value is required for METIS.
- * @author raghava
+ * input file for METIS. This value is required for METIS.
+ * @author Raghava
  *
  */
 public class GraphStats {
@@ -20,13 +20,19 @@ public class GraphStats {
 		long edgeCount = 0;
 		
 		String line;
-		while((line = reader.readLine()) != null) {
-			if(line.trim().isEmpty())
-				continue;
-			String[] tokens = line.trim().split("\\s");
-			edgeCount += tokens.length;
+		try {
+			while((line = reader.readLine()) != null) {
+				line = line.trim();
+				if(line.isEmpty())
+					continue;
+				String[] tokens = line.split("\\s");
+				edgeCount += tokens.length;
+			}
 		}
-		
+		finally {
+			if(reader != null)
+				reader.close();
+		}		
 		return edgeCount/2;
 	}
 
