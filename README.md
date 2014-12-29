@@ -96,7 +96,7 @@ number of nodes in the cluster.
 1. The output of Metis specifies the vertices which belong to a particular partition. From that, we 
 need to get the triples associated with those vertices. Following steps are required to get all the
 triples which should go into a particular partition.
-2. Combine VertexID file and partitionID file. Use ```ant partition-format -Dvid=vertex-r-00000 -Dpid=adjvertex-r-00000.part.<num>```.
+2. Combine VertexID file and partitionID file. Use ```java -Xms12g -Xmx12g -cp dist/d-sparq.jar dsparq.partitioning.format.VertexPartitionFormatter vertex-r-00000 adjvertex-r-00000.part.<num>```.
 3. Based on the vertexID - partitionID pairs, create separate files for each partition which contain 
 all vertices belonging to that partition. Use ```hadoop jar dist/d-sparq.jar dsparq.partitioning.TripleSplitter <input_dir> <output_dir>```.
 Input directory contains the combined vertexID - partitionID pairs.
