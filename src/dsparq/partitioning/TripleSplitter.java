@@ -24,14 +24,21 @@ import org.apache.hadoop.mapred.TextOutputFormat;
 import org.apache.hadoop.mapred.lib.MultipleOutputs;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
-import org.apache.log4j.Logger;
 
 import dsparq.misc.PropertyFileHandler;
 
+/**
+ * This MR job, based on the vertexID-partitionID pairs, create separate files 
+ * for each partition which contain all vertices belonging to that partition.
+ * For example, partition-1 would contain all vertices that have been assigned
+ * to that partition by METIS and so on.
+ *  
+ * @author Raghava Mutharaju
+ */
 public class TripleSplitter extends Configured implements Tool {
 
-	private static final Logger log = Logger.getLogger(
-										TripleSplitter.class);
+//	private static final Logger log = Logger.getLogger(
+//										TripleSplitter.class);
 			
 	private static class Map extends MapReduceBase implements 
 			Mapper<Text, Text, LongWritable, LongWritable> {
