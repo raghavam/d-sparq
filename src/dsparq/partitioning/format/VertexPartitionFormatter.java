@@ -45,7 +45,7 @@ public class VertexPartitionFormatter {
 			while((vertexID = vertexIDReader.readLine()) != null) {
 				partitionID = partitionIDReader.readLine().trim();
 				vertexID = vertexID.trim();
-				writer.println(vertexID + " " + partitionID);
+				writer.println(vertexID + "\t" + partitionID);
 				count++;
 				if(count%10000 == 0)
 					System.out.println("Reached " + count);
