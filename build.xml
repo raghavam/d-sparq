@@ -24,8 +24,7 @@
 		</classpath>
 		</javac>
 	</target>	
-	
-	
+		
 	<target name="jar" depends="compile">
 		<jar destfile="${dist}/${ant.project.name}.jar" basedir="${build}">
 			<zipgroupfileset dir="${lib}" includes="*.jar"/>
@@ -34,52 +33,7 @@
 			</fileset>	
 		</jar>
 	</target>
-	
-	<target name="convert" depends="compile">
-		<java classname="dsparq.load.DataConverter" fork="true">
-			<arg value="${data}"/>
-		    <jvmarg value="-Xms5g"/> 
-			<jvmarg value="-Xmx5g"/>
-			<classpath>
-				<dirset dir="${build}"></dirset>
-				
-				<fileset dir="${lib}">
-					<include name="*.jar"/>
-				</fileset>
-			</classpath>
-		</java>	
-	</target>	
-	
-	<target name="run-query" depends="compile">
-			<java classname="dsparq.query.QueryExecutor" fork="true">
-			    <jvmarg value="-Xms5g"/> 
-				<jvmarg value="-Xmx5g"/>
-				<classpath>
-					<dirset dir="${build}"></dirset>
-					
-					<fileset dir="${lib}">
-						<include name="*.jar"/>
-					</fileset>
-				</classpath>
-			</java>	
-		</target>	
-	
-	<target name="format-converter" depends="compile">
-		<java classname="dsparq.load.FormatConverter" fork="true">
-			<arg value="${indir}"/>
-			<arg value="${outdir}"/>
-		    <jvmarg value="-Xms6g"/> 
-			<jvmarg value="-Xmx6g"/>
-			<classpath>
-				<dirset dir="${build}"></dirset>
-				
-				<fileset dir="${lib}">
-					<include name="*.jar"/>
-				</fileset>
-			</classpath>
-		</java>	
-	</target>		
-	
+
 	<target name="clean">
 		<delete dir="${build}" quiet="true">
 		</delete>
