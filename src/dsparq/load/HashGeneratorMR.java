@@ -125,10 +125,11 @@ public class HashGeneratorMR extends Configured implements Tool {
 	
 	@Override
 	public int run(String[] args) throws Exception {
-		if(args.length != 2) {
-			String message = "Incorrect arguments -- requires 2 argument.\n\t " +
-			"1) directory containing N-triples. " +
-			"2) Output Directory";
+		if(args.length != 3) {
+			String message = "Incorrect arguments -- requires 3 argument.\n\t " +
+			"1) directory containing N-triples. \n\t" +
+			"2) Output Directory \n\t" +
+			"3) Number of nodes";
 			throw new Exception(message);
 		}
 
@@ -165,8 +166,7 @@ public class HashGeneratorMR extends Configured implements Tool {
 		FileInputFormat.setInputPaths(jobConf, new Path(triples));
 		FileOutputFormat.setOutputPath(jobConf, outputPath);
 
-		PropertyFileHandler propertyFileHandler = PropertyFileHandler.getInstance();
-		int numNodes = propertyFileHandler.getShardCount();
+		int numNodes = Integer.parseInt(args[2]);
 		int numReducers = (int)Math.ceil(0.95 * numNodes * 2);
 		log.info("Number of reducers: " + numReducers);
 		
