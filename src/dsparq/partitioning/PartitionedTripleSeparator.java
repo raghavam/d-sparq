@@ -23,18 +23,16 @@ import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.RunningJob;
 import org.apache.hadoop.mapred.TextOutputFormat;
-import org.apache.hadoop.mapred.lib.MultipleOutputs;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
-import org.apache.log4j.Logger;
 
 import dsparq.misc.Constants;
 import dsparq.misc.PropertyFileHandler;
 
 public class PartitionedTripleSeparator extends Configured implements Tool {
 
-	private static final Logger log = Logger.getLogger(
-										TripleSplitter.class);
+//	private static final Logger log = Logger.getLogger(
+//										PartitionedTripleSeparator.class);
 			
 	private static class Map extends MapReduceBase implements 
 			Mapper<Text, Text, LongWritable, Text> {
@@ -43,7 +41,7 @@ public class PartitionedTripleSeparator extends Configured implements Tool {
 		public void map(Text key, Text value, 
 				OutputCollector<LongWritable, Text> output,
 				Reporter reporter) throws IOException {
-			// expected input format: vertexID and
+			// expected input format: vertexID	partitionID and
 			//						  sub|pred|obj|bool
 			
 			String[] tokens = key.toString().split(Constants.REGEX_DELIMITER);
@@ -121,10 +119,7 @@ public class PartitionedTripleSeparator extends Configured implements Tool {
 		
 		JobConf jobConf = new JobConf(this.getClass());
 		jobConf.setJobName("PartitionedTripleSeparator");
-		
-		Path pOutput = new Path(outputDir + "");
-		
-		FileOutputFormat.setOutputPath(jobConf, pOutput);
+		FileOutputFormat.setOutputPath(jobConf, outputPath);
 		
 		jobConf.setInputFormat(KeyValueTextInputFormat.class);
 		jobConf.setOutputFormat(TextOutputFormat.class);	

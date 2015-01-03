@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
 
@@ -729,6 +730,14 @@ public class MongoConnector {
 		mongo.close();
 	}
 	
+	private static void testSystemProperties() {
+		Properties properties = System.getProperties();
+		Set<Entry<Object,Object>> entries = properties.entrySet();
+		for(Entry<Object,Object> entry : entries)
+			System.out.println(entry.getKey().toString() + "   " + 
+					entry.getValue().toString());
+	}
+	
 	public static void main(String[] args) throws Exception {
 //		connectToMongo();
 //		testDocInserts();
@@ -750,8 +759,8 @@ public class MongoConnector {
 //		testMongoDupID();
 //		deleteRedisHashField();
 //		testRedisReadSpeed();
-		testMongoNullException();
-		
+//		testMongoNullException();
+		testSystemProperties();
 	}
 }
 
