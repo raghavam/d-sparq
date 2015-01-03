@@ -136,7 +136,7 @@ public class HashGeneratorMR extends Configured implements Tool {
 		String outputDir = args[1];
 		Path outputPath = new Path(outputDir);
 		Configuration fconf = new Configuration();
-		FileSystem fs = FileSystem.get(fconf);
+		FileSystem fs = outputPath.getFileSystem(fconf);
 
 		if (fs.exists(outputPath)) {
 			fs.delete(outputPath, true);
