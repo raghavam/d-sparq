@@ -36,7 +36,6 @@ import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
 
 import dsparq.misc.Constants;
-import dsparq.misc.PropertyFileHandler;
 import dsparq.util.LRUCache;
 import dsparq.util.Util;
 
@@ -182,20 +181,15 @@ public class KVFileCreatorMR extends Configured implements Tool {
 		String outputDir = args[1];
 		Path outputPath = new Path(outputDir);
 		Configuration fconf = new Configuration();
-		FileSystem fs = FileSystem.get(fconf);
+		FileSystem fs = outputPath.getFileSystem(fconf);
 
 		if (fs.exists(outputPath)) {
 			fs.delete(outputPath, true);
 		}
 		
-		PropertyFileHandler propertyFileHandler = 
-			PropertyFileHandler.getInstance();
 		JobConf jobConf = new JobConf(this.getClass());
-		jobConf.setJobName("KVFileCreatorMR");
-		
-		if(propertyFileHandler == null)
-			System.out.println("prop file handler is null");
-		jobConf.set("mongo.router", propertyFileHandler.getMongoRouter());
+		jobConf.setJobName("KVFileCreatorMR");		
+		jobConf.set("mongo.router", args[2]);
 		FileInputFormat.setInputPaths(jobConf, new Path(triples));
 		FileOutputFormat.setOutputPath(jobConf, outputPath);
 		jobConf.setMapperClass(Map.class);
@@ -207,7 +201,7 @@ public class KVFileCreatorMR extends Configured implements Tool {
 		jobConf.setOutputKeyClass(Text.class);
 		jobConf.setOutputValueClass(NullWritable.class);
 		
-		int numNodes = propertyFileHandler.getShardCount();
+		int numNodes = Integer.parseInt(args[3]);
 		int numReducers = (int)Math.ceil(0.95 * numNodes * 2);
 		jobConf.setNumReduceTasks(numReducers);
 		RunningJob job = JobClient.runJob(jobConf);
@@ -220,10 +214,12 @@ public class KVFileCreatorMR extends Configured implements Tool {
 	}
 
 	public static void main(String[] args) throws Exception {
-		if (args.length != 2) {
-			String msg = "Incorrect arguments -- requires 2 arguments.\n\t " +
+		if (args.length != 4) {
+			String msg = "Incorrect arguments -- requires 4 arguments.\n\t " +
 					"1) NT Triples file \n\t" +
-					"2) Output path";
+					"2) Output path \n\t" +
+					"3) Mongo router in host:port format \n\t" +
+					"4) Number of nodes";
 			throw new Exception(msg);
 		}
 		ToolRunner.run(new KVFileCreatorMR(), args);

@@ -31,7 +31,6 @@ import org.semanticweb.yars.nx.Node;
 import org.semanticweb.yars.nx.parser.NxParser;
 
 import dsparq.misc.Constants;
-import dsparq.misc.PropertyFileHandler;
 import dsparq.util.Util;
 
 /**
