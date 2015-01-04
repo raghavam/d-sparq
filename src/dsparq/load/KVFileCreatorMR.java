@@ -24,6 +24,7 @@ import org.apache.hadoop.mapred.RunningJob;
 import org.apache.hadoop.mapred.TextOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
+import org.apache.log4j.Logger;
 import org.semanticweb.yars.nx.Literal;
 import org.semanticweb.yars.nx.Node;
 import org.semanticweb.yars.nx.parser.NxParser;
@@ -48,6 +49,8 @@ import dsparq.util.Util;
  */
 public class KVFileCreatorMR extends Configured implements Tool {
 
+	private static final Logger log = Logger.getLogger(KVFileCreatorMR.class);
+	
 	private static class Map extends MapReduceBase implements 
 	Mapper<Text, Text, Text, Text> {
 
@@ -101,6 +104,7 @@ public class KVFileCreatorMR extends Configured implements Tool {
 				DB db = mongo.getDB(Constants.MONGO_RDF_DB);
 				idValCollection = db.getCollection(
 						Constants.MONGO_IDVAL_COLLECTION);
+				log.info("DB connection check: " + idValCollection.count());
 			}catch (Exception e) {
 				e.printStackTrace();
 			}
