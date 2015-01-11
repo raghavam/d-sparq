@@ -38,7 +38,9 @@ public class HashDigestLoader {
 			DBCollection idValCollection = db.getCollection(
 					Constants.MONGO_IDVAL_COLLECTION);
 			String line;
+			int count = 0;
 			for(File file : files) {
+				System.out.println("Inserting contents of " + file.getName());
 				//bulk operation has to be reinitialized after execute()
 				BulkWriteOperation bulkInsert = 
 						idValCollection.initializeUnorderedBulkOperation();
@@ -55,6 +57,14 @@ public class HashDigestLoader {
 //					doc.put(Constants.FIELD_STR_VALUE, splits[2]);
 					
 					bulkInsert.insert(doc);
+					count++;
+					//limit placed to avoid OOM exception
+					if(count == 1000) {
+						bulkInsert.execute();
+						bulkInsert = 
+								idValCollection.initializeUnorderedBulkOperation();
+						count = 0;
+					}
 				}
 				bulkInsert.execute();
 				bufferedReader.close();
