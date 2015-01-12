@@ -42,8 +42,8 @@ public class HashDigestLoader {
 			for(File file : files) {
 				System.out.println("Inserting contents of " + file.getName());
 				//bulk operation has to be reinitialized after execute()
-				BulkWriteOperation bulkInsert = 
-						idValCollection.initializeUnorderedBulkOperation();
+//				BulkWriteOperation bulkInsert = 
+//						idValCollection.initializeUnorderedBulkOperation();
 				FileReader fileReader = new FileReader(file);
 				BufferedReader bufferedReader = new BufferedReader(fileReader);
 				while((line = bufferedReader.readLine()) != null) {
@@ -56,17 +56,17 @@ public class HashDigestLoader {
 					//space. Convert queries to numerical equivalents and compare.
 //					doc.put(Constants.FIELD_STR_VALUE, splits[2]);
 					
-					bulkInsert.insert(doc);
+//					bulkInsert.insert(doc);
 					count++;
 					//limit placed to avoid OOM exception
 					if(count == 1000) {
-						bulkInsert.execute();
-						bulkInsert = 
-								idValCollection.initializeUnorderedBulkOperation();
+//						bulkInsert.execute();
+//						bulkInsert = 
+//								idValCollection.initializeUnorderedBulkOperation();
 						count = 0;
 					}
 				}
-				bulkInsert.execute();
+//				bulkInsert.execute();
 				bufferedReader.close();
 				fileReader.close();
 				System.out.println("Done with " + file.getName());
