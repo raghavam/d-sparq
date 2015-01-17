@@ -35,6 +35,7 @@ import dsparq.util.Util;
  */
 public class HashDigestLoader {
 
+/*	
 	public void loadTripleIDsIntoDB(File[] files) {
 		Mongo mongo = null;
 		PropertyFileHandler propertyFileHandler = 
@@ -86,6 +87,7 @@ public class HashDigestLoader {
 				mongo.close();
 		}
 	}
+*/	
 	
 	/**
 	 * counts the types i.e., rdf:type triples. This function is used
@@ -143,6 +145,8 @@ public class HashDigestLoader {
 			}
 			
 			String line;
+			int numericID = 1;
+			int ignoreID = -1;
 			for(File file : files) {
 				System.out.println("Inserting contents of " + file.getName());
 				FileReader fileReader = new FileReader(file);
@@ -151,7 +155,16 @@ public class HashDigestLoader {
 					String[] splits = line.split(Constants.REGEX_DELIMITER);
 					BasicDBObject doc = new BasicDBObject();
 					doc.put(Constants.FIELD_HASH_VALUE, splits[0]);
-					doc.put(Constants.FIELD_TYPEID, Long.parseLong(splits[1]));
+					long typeID = Long.parseLong(splits[1]);
+					doc.put(Constants.FIELD_TYPEID, typeID);
+					if(typeID == 1) {
+						doc.put(Constants.FIELD_NUMID, numericID);
+						numericID++;
+					}
+					else if(typeID == -1) {
+						doc.put(Constants.FIELD_NUMID, ignoreID);
+						ignoreID--;
+					}
 					
 					//not saving the string values here since they take lot of 
 					//space. Convert queries to numerical equivalents and compare.
