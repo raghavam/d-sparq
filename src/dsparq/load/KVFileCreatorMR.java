@@ -125,6 +125,7 @@ public class KVFileCreatorMR extends Configured implements Tool {
 				}
 				if(subID == null)
 					throw new Exception("subID is null: " + key.toString());
+				output.collect(new Text("Subj: " + key.toString() + "!!! " + subDigest), null);
 				while(values.hasNext()) {
 					String[] predObj = 
 						values.next().toString().split(Constants.REGEX_DELIMITER);
@@ -148,8 +149,10 @@ public class KVFileCreatorMR extends Configured implements Tool {
 					}
 					if(objID == null)
 						throw new Exception("objID is null: " + predObj[1]);
-					output.collect(new Text(subID + Constants.TRIPLE_TERM_DELIMITER + 
-							predID + Constants.TRIPLE_TERM_DELIMITER + objID), null);
+					output.collect(new Text("Pred: " + predObj[0] + "!!! " + predDigest), null);
+					output.collect(new Text("Obj: " + predObj[1] + "!!! " + objDigest), null);
+//					output.collect(new Text(subID + Constants.TRIPLE_TERM_DELIMITER + 
+//							predID + Constants.TRIPLE_TERM_DELIMITER + objID), null);
 				}
 			}
 			catch(Exception e) {
