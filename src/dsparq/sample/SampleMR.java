@@ -109,19 +109,18 @@ public class SampleMR extends Configured implements Tool {
 		JobConf jobConf = new JobConf(this.getClass());
 		jobConf.setJobName("SampleMR");
 		jobConf.set("mongo.router", args[2]);
-		jobConf.setInputFormat(KeyValueTextInputFormat.class);
-		jobConf.setOutputFormat(TextOutputFormat.class);	
 		FileOutputFormat.setOutputPath(jobConf, outputPath);
 		FileInputFormat.setInputPaths(jobConf, inputPath);
+		jobConf.setInputFormat(KeyValueTextInputFormat.class);
+		jobConf.setOutputFormat(TextOutputFormat.class);	
 		jobConf.setMapperClass(Map.class);
 		jobConf.setReducerClass(Reducer.class);
+		jobConf.setMapOutputKeyClass(Text.class);
+	    jobConf.setMapOutputValueClass(Text.class);
 		jobConf.setOutputKeyClass(Text.class);
 		jobConf.setOutputValueClass(NullWritable.class);
 		
 		RunningJob job = JobClient.runJob(jobConf);
-		if (!job.isSuccessful()) {
-			System.out.println("Hadoop Job Failed");
-		}
 		if(!job.isSuccessful()) {
 			log.error("FAILED!!!");
 			return -1;
