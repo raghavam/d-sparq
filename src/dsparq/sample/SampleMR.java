@@ -114,7 +114,7 @@ public class SampleMR extends Configured implements Tool {
 		jobConf.setInputFormat(KeyValueTextInputFormat.class);
 		jobConf.setOutputFormat(TextOutputFormat.class);	
 		jobConf.setMapperClass(Map.class);
-		jobConf.setReducerClass(Reducer.class);
+		jobConf.setReducerClass(Reduce.class);
 		jobConf.setMapOutputKeyClass(Text.class);
 	    jobConf.setMapOutputValueClass(Text.class);
 		jobConf.setOutputKeyClass(Text.class);
