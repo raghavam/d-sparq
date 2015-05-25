@@ -75,7 +75,7 @@ Triples are loaded into the local DB. Indexes are also created in this step.
 
 ##### Separate rdf:type triples
 
-1. Use ```hadoop jar dist/d-sparq.jar dsparq.partitioning.GetTypeTriples <input_dir> <output_dir>```. 
+1. Use ```hadoop jar dist/d-sparq.jar dsparq.partitioning.TypeTriplesSeparator <input_dir> <output_dir>```. 
 Ignore this step if there is only 1 node in the cluster.
 
 ##### Generate input file for Metis

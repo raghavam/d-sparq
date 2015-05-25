@@ -21,6 +21,7 @@ import org.apache.hadoop.mapred.RunningJob;
 import org.apache.hadoop.mapred.lib.MultipleTextOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
+import org.apache.log4j.Logger;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
@@ -44,9 +45,9 @@ import dsparq.util.Util;
  * Modified by Raghava Mutharaju
  *
  */
-public class GetTypeTriples extends Configured implements Tool{
+public class TypeTriplesSeparator extends Configured implements Tool{
 	
-//	private static final Logger log = Logger.getLogger(GetTypeTriples.class); 
+	private static final Logger log = Logger.getLogger(TypeTriplesSeparator.class); 
 	
 	private static class Map extends MapReduceBase implements Mapper<Text, Text, Text, Text> 
 	{
@@ -80,7 +81,7 @@ public class GetTypeTriples extends Configured implements Tool{
 	}
 	
 	public static void main(String[] args) throws Exception {
-		int res = ToolRunner.run(new Configuration(), new GetTypeTriples(), args);
+		int res = ToolRunner.run(new Configuration(), new TypeTriplesSeparator(), args);
 		System.exit(res);
 	}	
 
@@ -105,7 +106,7 @@ public class GetTypeTriples extends Configured implements Tool{
 			fs.delete(outputPath, true);
 			
 		JobConf jobConf = new JobConf(this.getClass());
-		jobConf.setJobName("GetTypeTriples");
+		jobConf.setJobName("TypeTriplesSeparator");
 		//get the ID of rdf:type and make it available to MR job
 		PropertyFileHandler propertyFileHandler = 
 				PropertyFileHandler.getInstance();
@@ -131,7 +132,7 @@ public class GetTypeTriples extends Configured implements Tool{
 		
 		RunningJob job = JobClient.runJob(jobConf);
 		if (!job.isSuccessful())
-			System.out.println("FAILED!!!");
+			log.error("FAILED!!!");
 
 		return 0;
 	}
@@ -147,7 +148,7 @@ public class GetTypeTriples extends Configured implements Tool{
 				projectionDoc);
 		if(resultDoc == null)
 			throw new Exception("ID not present for rdf:type");
-		Double numID = (Double) resultDoc.get(Constants.FIELD_NUMID);
+		Long numID = (Long) resultDoc.get(Constants.FIELD_NUMID);
 		if(numID == null)
 			throw new Exception("numID is null for " + digest);
 		return numID.toString();
