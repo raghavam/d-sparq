@@ -62,8 +62,7 @@ public class HashGeneratorMR extends Configured implements Tool {
 			Node[] nodes = nxParser.next();
 			output.collect(new Text(nodes[0].toString()), new LongWritable(1)); 
 			output.collect(new Text(nodes[1].toString()), new LongWritable(1)); 
-			if(nodes[1].toString().equals(
-					"http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
+			if(nodes[1].toString().equals(Constants.RDF_TYPE_URI))
 				output.collect(new Text(nodes[2].toString()), 
 						new LongWritable(-1)); 
 			else {
