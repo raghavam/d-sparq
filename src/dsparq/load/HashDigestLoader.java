@@ -181,8 +181,15 @@ public class HashDigestLoader {
 				fileReader.close();
 				System.out.println("Done with " + file.getName());
 			}
-			for(HashDigestDocConsumer task : tasks)
-				task.setStopProcessing();
+//			for(HashDigestDocConsumer task : tasks)
+//				task.setStopProcessing();
+			//Null doc indicates end of documents
+			BasicDBObject nullDoc = new BasicDBObject();
+			nullDoc.put(Constants.FIELD_HASH_VALUE, null);
+			//one for each thread
+			for(int i=0; i<numThreads; i++) {
+				tripleHashDocQueue.put(nullDoc);
+			}
 			barrierPhaser.arriveAndAwaitAdvance();
 			threadExecutor.shutdown();
 			System.out.println("\nDone");
@@ -244,12 +251,19 @@ class HashDigestDocConsumer implements Runnable {
 		barrierPhaser.register();
 		int count = 0;
 		DBObject doc = null;
-		while(!stopProcessing) {
-			while((doc = docQueue.poll()) != null) {
+//		while(!stopProcessing) {
+			while(true) {
+				try {
+					doc = docQueue.take();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
 //				System.out.println(Thread.currentThread().getName() + ": " + doc);
+				if(doc.get(Constants.FIELD_HASH_VALUE) == null)
+					break;
 				bulkInsert.insert(doc);
 				docCount.incrementAndGet();
-//				doc = docQueue.poll();
+				
 				count++;
 				if(count == 1000) {
 					bulkInsert.execute();
@@ -266,7 +280,7 @@ class HashDigestDocConsumer implements Runnable {
 				count = 0;
 			}
 //			System.out.println("Out of loop...");
-		}
+//		}
 		barrierPhaser.arrive();
 	}
 	
