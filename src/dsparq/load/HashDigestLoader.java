@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import jsr166y.Phaser;
 
@@ -138,15 +139,17 @@ public class HashDigestLoader {
 			List<HashDigestDocConsumer> tasks = 
 					new ArrayList<HashDigestDocConsumer>(numThreads);
 			
+			AtomicInteger docCount = new AtomicInteger(0);
 			for(int i=0; i<numThreads; i++) {
 				tasks.add(new HashDigestDocConsumer(tripleHashDocQueue, 
-						barrierPhaser, idValCollection));
+						barrierPhaser, idValCollection, docCount));
 				threadExecutor.submit(tasks.get(i));
 			}
 			
 			String line;
 			int numericID = 1;
 			int ignoreID = -1;
+			int tripleCount = 0;
 			for(File file : files) {
 				System.out.println("Inserting contents of " + file.getName());
 				FileReader fileReader = new FileReader(file);
@@ -171,6 +174,7 @@ public class HashDigestLoader {
 //					doc.put(Constants.FIELD_STR_VALUE, splits[2]);
 					
 					tripleHashDocQueue.put(doc);
+					tripleCount++;
 				}
 //				bulkInsert.execute();
 				bufferedReader.close();
@@ -182,6 +186,8 @@ public class HashDigestLoader {
 			barrierPhaser.arriveAndAwaitAdvance();
 			threadExecutor.shutdown();
 			System.out.println("\nDone");
+			System.out.println("Triples: " + tripleCount + "  Docs: " + 
+					docCount + " should match");
 			
 		}catch (Exception e) {
 			e.printStackTrace();
@@ -217,13 +223,16 @@ class HashDigestDocConsumer implements Runnable {
 	private boolean stopProcessing = false;
 	private DBCollection idValCollection;
 	private BulkWriteOperation bulkInsert; 		
+	private AtomicInteger docCount;
 	
 	HashDigestDocConsumer(LinkedBlockingQueue<DBObject> docQueue, 
-			Phaser barrierPhaser, DBCollection idValCollection) {
+			Phaser barrierPhaser, DBCollection idValCollection, 
+			AtomicInteger docCount) {
 		this.docQueue = docQueue;
 		this.barrierPhaser = barrierPhaser;
 		this.idValCollection = idValCollection;
 		bulkInsert = idValCollection.initializeUnorderedBulkOperation();
+		this.docCount = docCount;
 	}
 	
 	public void setStopProcessing() {
@@ -239,6 +248,7 @@ class HashDigestDocConsumer implements Runnable {
 			while((doc = docQueue.poll()) != null) {
 //				System.out.println(Thread.currentThread().getName() + ": " + doc);
 				bulkInsert.insert(doc);
+				docCount.incrementAndGet();
 //				doc = docQueue.poll();
 				count++;
 				if(count == 1000) {
