@@ -63,7 +63,7 @@ public class HashDigestLoader {
 			}
 
 			String line;
-			int numericID = 1;
+			long numericID = 1;
 			int ignoreID = -1;
 			int tripleCount = 0;
 			for (File file : files) {
