@@ -64,6 +64,10 @@ public class HashDigestLoader {
 
 			String line;
 			long numericID = 1;
+			// Keeping the numID of subjects/objects separate from predicates.
+			// This is useful/required when graph partitioning using Metis. 
+			// If not, there will be holes in the sequence of vertex IDs.
+			long predicateNumericID = 1;
 			int ignoreID = -1;
 			int tripleCount = 0;
 			for (File file : files) {
@@ -77,8 +81,14 @@ public class HashDigestLoader {
 					long typeID = Long.parseLong(splits[1]);
 					doc.put(Constants.FIELD_TYPEID, typeID);
 					if (typeID == 1) {
-						doc.put(Constants.FIELD_NUMID, numericID);
-						numericID++;
+						if(splits[3].equals(Constants.PREDICATE_INDICATOR)) {
+							doc.put(Constants.FIELD_NUMID, predicateNumericID);
+							predicateNumericID++;
+						}
+						else {
+							doc.put(Constants.FIELD_NUMID, numericID);
+							numericID++;
+						}
 					} else if (typeID == -1) {
 						doc.put(Constants.FIELD_NUMID, ignoreID);
 						ignoreID--;

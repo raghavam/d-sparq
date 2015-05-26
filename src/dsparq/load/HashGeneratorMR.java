@@ -60,10 +60,17 @@ public class HashGeneratorMR extends Configured implements Tool {
 			StringReader reader = new StringReader(key.toString());
 			NxParser nxParser = new NxParser(reader);
 			Node[] nodes = nxParser.next();
-			output.collect(new Text(nodes[0].toString()), new LongWritable(1)); 
-			output.collect(new Text(nodes[1].toString()), new LongWritable(1)); 
+			output.collect(new Text(nodes[0].toString() + 
+					Constants.TRIPLE_TERM_DELIMITER + 
+					Constants.NOT_PREDICATE_INDICATOR), 
+					new LongWritable(1)); 
+			output.collect(new Text(nodes[1].toString() + 
+					Constants.TRIPLE_TERM_DELIMITER + 
+					Constants.PREDICATE_INDICATOR), new LongWritable(1)); 
 			if(nodes[1].toString().equals(Constants.RDF_TYPE_URI))
-				output.collect(new Text(nodes[2].toString()), 
+				output.collect(new Text(nodes[2].toString() + 
+						Constants.TRIPLE_TERM_DELIMITER + 
+						Constants.NOT_PREDICATE_INDICATOR), 
 						new LongWritable(-1)); 
 			else {
 				if(nodes[2] instanceof Literal) {
@@ -79,7 +86,9 @@ public class HashGeneratorMR extends Configured implements Tool {
 							new LongWritable(1));
 				}
 				else
-					output.collect(new Text(nodes[2].toString()), 
+					output.collect(new Text(nodes[2].toString() + 
+							Constants.TRIPLE_TERM_DELIMITER + 
+							Constants.NOT_PREDICATE_INDICATOR), 
 							new LongWritable(1));
 			}
 			reader.close();
@@ -95,7 +104,8 @@ public class HashGeneratorMR extends Configured implements Tool {
 				Reporter reporter) {
 			try {
 				String keyStr = key.toString();
-				String digestValue = Util.generateMessageDigest(keyStr);
+				String termPredSplit[] = keyStr.split(Constants.REGEX_DELIMITER);
+				String digestValue = Util.generateMessageDigest(termPredSplit[0]);
 				int typeID = -1;
 				while(values.hasNext()) {
 					if(values.next().get() == 1) {
