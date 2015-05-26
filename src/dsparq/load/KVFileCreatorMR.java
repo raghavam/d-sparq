@@ -172,7 +172,7 @@ public class KVFileCreatorMR extends Configured implements Tool {
 					projectionDoc);
 			if(resultDoc == null)
 				throw new Exception("ID not present: " + digestValue + "  " + term);
-			Integer numID = (Integer) resultDoc.get(Constants.FIELD_NUMID);
+			Long numID = (Long) resultDoc.get(Constants.FIELD_NUMID);
 			if(numID == null)
 				throw new Exception("numID is null for " + digestValue);
 			return numID.toString();
