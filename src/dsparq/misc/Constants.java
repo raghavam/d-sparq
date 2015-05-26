@@ -75,6 +75,8 @@ public interface Constants {
 	
 	public static final String TRIPLE_TERM_DELIMITER = "|";	
 	public static final String REGEX_DELIMITER = "\\|";
+	public static final String PREDICATE_INDICATOR = "p";
+	public static final String NOT_PREDICATE_INDICATOR = "q";
 	
 	public static final String RDF_TYPE_URI = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
 	public static final String BASE_URI = "http://dummy.base.org";
