@@ -82,7 +82,9 @@ public class HashGeneratorMR extends Configured implements Tool {
 					if (literal.getDatatype() != null)
 						sb.append("^^").append(
 								literal.getDatatype().toString());
-					output.collect(new Text(sb.toString()), 
+					output.collect(new Text(sb.toString() + 
+							Constants.TRIPLE_TERM_DELIMITER + 
+							Constants.NOT_PREDICATE_INDICATOR), 
 							new LongWritable(1));
 				}
 				else
