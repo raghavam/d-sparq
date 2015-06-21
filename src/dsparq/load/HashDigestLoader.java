@@ -83,17 +83,20 @@ public class HashDigestLoader {
 					if (typeID == 1) {
 						if(splits[3].equals(Constants.PREDICATE_INDICATOR)) {
 							doc.put(Constants.FIELD_NUMID, predicateNumericID);
+							System.out.println(line + "|" + predicateNumericID);
 							predicateNumericID++;
 						}
 						else {
 							doc.put(Constants.FIELD_NUMID, numericID);
+							System.out.println(line + "|" + numericID);
 							numericID++;
 						}
 					} else if (typeID == -1) {
 						doc.put(Constants.FIELD_NUMID, ignoreID);
+						System.out.println(line + "|" + ignoreID);
 						ignoreID--;
 					}
-
+					
 					// not saving the string values here since they take lot of
 					// space. Convert queries to numerical equivalents and
 					// compare.
