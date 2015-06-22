@@ -43,7 +43,7 @@ public class GraphStats {
 		}
 		System.out.println("No of edges: " + new GraphStats().countEdges(args[0]));
 		System.out.println("For no of vertices check the last line of " +
-				"vertex-part-? file in partition-output folder");
+				"vertex-part-? file");
 	}
 
 }
