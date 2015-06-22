@@ -68,7 +68,7 @@ public class HashDigestLoader {
 			// This is useful/required when graph partitioning using Metis. 
 			// If not, there will be holes in the sequence of vertex IDs.
 			long predicateNumericID = 1;
-			int ignoreID = -1;
+			long ignoreID = -1;
 			int tripleCount = 0;
 			for (File file : files) {
 				System.out.println("Inserting contents of " + file.getName());
@@ -83,17 +83,17 @@ public class HashDigestLoader {
 					if (typeID == 1) {
 						if(splits[3].equals(Constants.PREDICATE_INDICATOR)) {
 							doc.put(Constants.FIELD_NUMID, predicateNumericID);
-							System.out.println(line + "|" + predicateNumericID);
+//							System.out.println(line + "|" + predicateNumericID);
 							predicateNumericID++;
 						}
 						else {
 							doc.put(Constants.FIELD_NUMID, numericID);
-							System.out.println(line + "|" + numericID);
+//							System.out.println(line + "|" + numericID);
 							numericID++;
 						}
 					} else if (typeID == -1) {
 						doc.put(Constants.FIELD_NUMID, ignoreID);
-						System.out.println(line + "|" + ignoreID);
+//						System.out.println(line + "|" + ignoreID);
 						ignoreID--;
 					}
 					
