@@ -8,6 +8,7 @@ import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
@@ -41,22 +42,21 @@ public class TripleSplitter extends Configured implements Tool {
 //										TripleSplitter.class);
 			
 	private static class Map extends MapReduceBase implements 
-			Mapper<Text, Text, LongWritable, LongWritable> {
+			Mapper<Text, Text, Text, Text> {
 		
 		@Override
 		public void map(Text key, Text value, 
-				OutputCollector<LongWritable, LongWritable> output,
+				OutputCollector<Text, Text> output,
 				Reporter reporter) throws IOException {
 			// expected input format: vertexID	partitionID
 			
 			// key is vertexID and value is partitionID
-			output.collect(new LongWritable(Long.parseLong(key.toString())), 
-					new LongWritable(Long.parseLong(value.toString())));
+			output.collect(value, key);
 		}
 	}
 	
 	private static class Reduce extends MapReduceBase implements 
-			Reducer<LongWritable, LongWritable, LongWritable, LongWritable> {
+			Reducer<Text, Text, Text, NullWritable> {
 		
 		private MultipleOutputs multipleOutputs;
 		
@@ -66,15 +66,14 @@ public class TripleSplitter extends Configured implements Tool {
 		}
 		
 		@Override
-		public void reduce(LongWritable key, Iterator<LongWritable> values,
-				OutputCollector<LongWritable, LongWritable> output, Reporter reporter)
+		public void reduce(Text key, Iterator<Text> values,
+				OutputCollector<Text, NullWritable> output, Reporter reporter)
 				throws IOException {
 			// all the Vertices belonging to this partition would be given by
 			// the iterator
 			while(values.hasNext()) {
-				long vertexID = values.next().get();
 				multipleOutputs.getCollector("triples" + key.toString(), 
-						reporter).collect(new LongWritable(vertexID), new LongWritable());
+						reporter).collect(values.next(), null);
 						
 			}
 		}
@@ -117,18 +116,15 @@ public class TripleSplitter extends Configured implements Tool {
 		FileOutputFormat.setOutputPath(jobConf, pOutput);
 		
 		jobConf.setInputFormat(KeyValueTextInputFormat.class);
-		jobConf.setOutputFormat(TextOutputFormat.class);	
-		
-		jobConf.setOutputKeyClass(Text.class);
-		jobConf.setOutputValueClass(Text.class);
-		
+		jobConf.setOutputFormat(TextOutputFormat.class);			
 		FileInputFormat.setInputPaths(jobConf, new Path(vertexPartitions));
-
 		jobConf.setMapperClass(Map.class);
 		jobConf.setReducerClass(Reduce.class);
 		
-		jobConf.setMapOutputKeyClass(LongWritable.class);
-		jobConf.setMapOutputValueClass(LongWritable.class);
+		jobConf.setMapOutputKeyClass(Text.class);
+		jobConf.setMapOutputValueClass(Text.class);
+		jobConf.setOutputKeyClass(Text.class);
+		jobConf.setOutputValueClass(NullWritable.class);
 		
 		int shardCount = propertyFileHandler.getShardCount();
 		int numReduceTasks = (int)(0.95 * Integer.parseInt(jobConf.get(
