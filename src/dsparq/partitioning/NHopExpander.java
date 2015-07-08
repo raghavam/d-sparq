@@ -58,9 +58,11 @@ public class NHopExpander extends Configured implements Tool {
 				output.collect(new Text(tripleFragments[0]), key);
 				output.collect(new Text(tripleFragments[2]), key);
 			}
-			else {
+			else if(tripleFragments.length == 1) {
 				output.collect(key, value);
 			}
+			else
+				throw new IOException("unexpected triple length: " + key);
 		}
 	}
 	
@@ -90,10 +92,11 @@ public class NHopExpander extends Configured implements Tool {
 				if(tripleFragments.length == 3) 
 					edgeList.add(tripleFragments);
 				else if(tripleFragments.length == 1)
-					partitionIDs.add(valueT);
+					partitionIDs.add(new Text(value + "@"));
 				else
 					throw new IOException("unknown type: " + value);
 			}
+			log.debug("PartitionIDs len: " + partitionIDs.size());
 			String keyStr = key.toString();
 			for(String[] edge : edgeList) {
 				for(Text partitionID : partitionIDs) {
