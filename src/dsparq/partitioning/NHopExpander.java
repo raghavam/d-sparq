@@ -92,7 +92,7 @@ public class NHopExpander extends Configured implements Tool {
 				if(tripleFragments.length == 3) 
 					edgeList.add(tripleFragments);
 				else if(tripleFragments.length == 1)
-					partitionIDs.add(new Text(value + "@"));
+					partitionIDs.add(valueT);
 				else
 					throw new IOException("unknown type: " + value);
 			}
