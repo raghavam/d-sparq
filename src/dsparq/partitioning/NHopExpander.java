@@ -85,14 +85,13 @@ public class NHopExpander extends Configured implements Tool {
 			List<Text> partitionIDs = new ArrayList<Text>();
 			// separate edges and partition ID
 			while(values.hasNext()) {
-				Text valueT = values.next();
-				String value = valueT.toString();
+				String value = values.next().toString();
 				String[] tripleFragments = 
 						value.split(Constants.REGEX_DELIMITER);
 				if(tripleFragments.length == 3) 
 					edgeList.add(tripleFragments);
 				else if(tripleFragments.length == 1)
-					partitionIDs.add(valueT);
+					partitionIDs.add(new Text(value));
 				else
 					throw new IOException("unknown type: " + value);
 			}
