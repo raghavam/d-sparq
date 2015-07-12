@@ -4,9 +4,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -128,17 +130,18 @@ public class NHopExpander extends Configured implements Tool {
 	public int run(String[] args) throws Exception {
 		String triplesAndVertexPartitionsIn = args[0];
 		String edgeVeretxPartitionsOut = args[1];
+		String finalOutputDir = args[2];
 
+		Path inputPath = new Path(triplesAndVertexPartitionsIn);
 		Path outputPath = new Path(edgeVeretxPartitionsOut);
+		Path finalOutputPath = new Path(finalOutputDir);
 		Configuration fconf = new Configuration();
 		FileSystem fs = FileSystem.get(fconf);
 
-		if (fs.exists(outputPath)) {
+		if (fs.exists(outputPath)) 
 			fs.delete(outputPath, true);
-		}
-			
-		PropertyFileHandler propertyFileHandler = 
-			PropertyFileHandler.getInstance();
+		if (fs.exists(finalOutputPath)) 
+			fs.delete(finalOutputPath, true);
 		
 		JobConf jobConf = new JobConf(this.getClass());
 		jobConf.setJobName("NHopExpander");
@@ -146,8 +149,7 @@ public class NHopExpander extends Configured implements Tool {
 		FileOutputFormat.setOutputPath(jobConf, outputPath);
 		jobConf.setInputFormat(KeyValueTextInputFormat.class);
 		jobConf.setOutputFormat(TextOutputFormat.class);			
-		FileInputFormat.setInputPaths(jobConf, 
-				new Path(triplesAndVertexPartitionsIn));
+		FileInputFormat.setInputPaths(jobConf, inputPath);
 		jobConf.setMapperClass(Map.class);
 		jobConf.setReducerClass(Reduce.class);
 		
@@ -156,6 +158,8 @@ public class NHopExpander extends Configured implements Tool {
 		jobConf.setOutputKeyClass(Text.class);
 		jobConf.setOutputValueClass(Text.class);
 		
+		PropertyFileHandler propertyFileHandler = 
+				PropertyFileHandler.getInstance();
 		int shardCount = propertyFileHandler.getShardCount();
 		int numReduceTasks = (int)(0.95 * Integer.parseInt(jobConf.get(
 				"mapred.tasktracker.reduce.tasks.maximum")) * 
@@ -166,23 +170,59 @@ public class NHopExpander extends Configured implements Tool {
 				TextOutputFormat.class, Text.class, Text.class);
 		MultipleOutputs.addNamedOutput(jobConf, "VertexPartitions", 
 				TextOutputFormat.class, Text.class, Text.class);
-		RunningJob job = JobClient.runJob(jobConf);
-
-		if (!job.isSuccessful()) {
-			log.error("Hadoop Job Failed");		
-			return -1;
+				
+		int hopCount = propertyFileHandler.getHopCount();
+		String vertexRegex = "[vV]ertex.*?";
+		Pattern vertexPattern = Pattern.compile(vertexRegex);
+		String edgeRegex = "Edge.*?";
+		Pattern edgePattern = Pattern.compile(edgeRegex);
+		for(int i=1; i<=hopCount; i++) {
+			RunningJob job = JobClient.runJob(jobConf);
+			if (!job.isSuccessful())
+				throw new Exception("Job Failed");
+			
+			//set the input/output directories
+			//triples and VertexPartitions (last iteration output) is the
+			//input. Collect EdgePartitions for output.
+			FileStatus[] files = fs.listStatus(inputPath);
+			for(FileStatus file : files) {
+				boolean isAMatch = vertexPattern.matcher(
+						file.getPath().getName()).matches();
+				if(isAMatch) 
+					fs.delete(file.getPath(), false);
+			}
+			//move VertexPartitions from output to input directory
+			//move EdgePartitions to final-output directory (rename the files)
+			files = fs.listStatus(outputPath);
+			for(FileStatus file : files) {
+				String fileName = file.getPath().getName();
+				boolean isAVertexMatch = vertexPattern.matcher(fileName).
+						matches();
+				boolean isAnEdgeMatch = edgePattern.matcher(fileName).
+						matches();
+				if(isAVertexMatch) {
+					String newPathStr = triplesAndVertexPartitionsIn + 
+							Path.SEPARATOR + fileName;
+					fs.rename(file.getPath(), new Path(newPathStr));
+				}
+				else if(isAnEdgeMatch) {
+					String newPathStr = finalOutputDir + Path.SEPARATOR + 
+							fileName + "-" + hopCount;
+					fs.rename(file.getPath(), new Path(newPathStr));
+				}
+			}
 		}
-		else
-			return 0;
+		return 0;
 	}
 
 	public static void main(String[] args) throws Exception {
-		if(args.length != 2) {
+		if(args.length != 3) {
 			String msg = "Incorrect arguments -- requires 2 arguments.\n\t " +
 					"1) directory containing triples in key-value format and " +
 						"vertex-partition ID pairs \n\t" +
 					"2) path to output directory that contains edge-partition " +
-						"ID pairs and vertex-partition ID pairs after expansion";
+						"ID pairs and vertex-partition ID pairs after expansion" +
+					"3) directory which has final output";
 			
 			throw new Exception(msg);
 		}
