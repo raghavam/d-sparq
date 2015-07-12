@@ -98,6 +98,11 @@ public class PropertyFileHandler {
 	public String getRedisHosts() {
 		return shardInfoProperties.getProperty("redis.hosts");
 	}
+	
+	public int getHopCount() {
+		String nhop = shardInfoProperties.getProperty("nhop");
+		return Integer.parseInt(nhop);
+	}
 }
 
 
