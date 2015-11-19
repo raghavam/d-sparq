@@ -117,6 +117,7 @@ public class HashDigestLoader {
 			for (int i = 0; i < numThreads; i++) {
 				tripleHashDocQueue.put(nullDoc);
 			}
+			System.out.println("Added nulls to indicate end of insertion");
 			barrierPhaser.arriveAndAwaitAdvance();
 			threadExecutor.shutdown();
 			System.out.println("\nDone");
