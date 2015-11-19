@@ -238,6 +238,6 @@ class HashDigestDocConsumer implements Runnable {
 			bulkInsert = idValCollection.initializeUnorderedBulkOperation();
 			count = 0;
 		}
-		barrierPhaser.arrive();
+		barrierPhaser.arriveAndDeregister();
 	}
 }
