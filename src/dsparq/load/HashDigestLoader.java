@@ -9,7 +9,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.Phaser;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.mongodb.BasicDBObject;
@@ -49,7 +48,7 @@ public class HashDigestLoader {
 			DBCollection idValCollection = db
 					.getCollection(Constants.MONGO_IDVAL_COLLECTION);
 			int numThreads = Runtime.getRuntime().availableProcessors();
-			CountDownLatch snychLatch = new CountDownLatch(numThreads);
+			CountDownLatch synchLatch = new CountDownLatch(numThreads);
 			ExecutorService threadExecutor = Executors
 					.newFixedThreadPool(numThreads);
 			List<HashDigestDocConsumer> tasks = new ArrayList<HashDigestDocConsumer>(
@@ -58,7 +57,7 @@ public class HashDigestLoader {
 			AtomicInteger docCount = new AtomicInteger(0);
 			for (int i = 0; i < numThreads; i++) {
 				tasks.add(new HashDigestDocConsumer(tripleHashDocQueue,
-						snychLatch, idValCollection, docCount));
+						synchLatch, idValCollection, docCount));
 				threadExecutor.submit(tasks.get(i));
 			}
 
@@ -118,7 +117,7 @@ public class HashDigestLoader {
 				tripleHashDocQueue.put(nullDoc);
 			}
 			System.out.println("Added nulls to indicate end of insertion");
-			snychLatch.await();;
+			synchLatch.await();
 			threadExecutor.shutdown();
 			System.out.println("\nDone");
 			System.out.println("Triples: " + tripleCount + "  Docs: "
@@ -185,16 +184,16 @@ public class HashDigestLoader {
 class HashDigestDocConsumer implements Runnable {
 
 	private LinkedBlockingQueue<DBObject> docQueue;
-	private CountDownLatch snychLatch;
+	private CountDownLatch synchLatch;
 	private DBCollection idValCollection;
 	private BulkWriteOperation bulkInsert;
 	private AtomicInteger docCount;
 
 	HashDigestDocConsumer(LinkedBlockingQueue<DBObject> docQueue,
-			CountDownLatch snychLatch, DBCollection idValCollection,
+			CountDownLatch synchLatch, DBCollection idValCollection,
 			AtomicInteger docCount) {
 		this.docQueue = docQueue;
-		this.snychLatch = snychLatch;
+		this.synchLatch = synchLatch;
 		this.idValCollection = idValCollection;
 		bulkInsert = idValCollection.initializeUnorderedBulkOperation();
 		this.docCount = docCount;
@@ -227,6 +226,8 @@ class HashDigestDocConsumer implements Runnable {
 			bulkInsert = idValCollection.initializeUnorderedBulkOperation();
 			count = 0;
 		}
-		snychLatch.countDown();
+		synchLatch.countDown();
+		System.out.println(Thread.currentThread().getName() + 
+				"  countDown: " + synchLatch.getCount());
 	}
 }
