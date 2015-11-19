@@ -233,12 +233,12 @@ class HashDigestDocConsumer implements Runnable {
 				count = 0;
 			}
 		}
-		System.out.println(Thread.currentThread().getName() + "  out of the loop");
 		if (count > 1) {
 			bulkInsert.execute();
 			bulkInsert = idValCollection.initializeUnorderedBulkOperation();
 			count = 0;
 		}
+		System.out.println(Thread.currentThread().getName() + "  out of the loop");
 		phaseNumber = barrierPhaser.arriveAndDeregister();
 		System.out.println(Thread.currentThread().getName() + 
 				"  end of run(), phase number: " + phaseNumber);
