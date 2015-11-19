@@ -5,12 +5,12 @@ import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.Phaser;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import jsr166y.Phaser;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.BulkWriteOperation;
@@ -48,8 +48,8 @@ public class HashDigestLoader {
 			DB db = mongo.getDB(Constants.MONGO_RDF_DB);
 			DBCollection idValCollection = db
 					.getCollection(Constants.MONGO_IDVAL_COLLECTION);
-			Phaser barrierPhaser = new Phaser(1);
 			int numThreads = Runtime.getRuntime().availableProcessors();
+			CountDownLatch snychLatch = new CountDownLatch(numThreads);
 			ExecutorService threadExecutor = Executors
 					.newFixedThreadPool(numThreads);
 			List<HashDigestDocConsumer> tasks = new ArrayList<HashDigestDocConsumer>(
@@ -58,7 +58,7 @@ public class HashDigestLoader {
 			AtomicInteger docCount = new AtomicInteger(0);
 			for (int i = 0; i < numThreads; i++) {
 				tasks.add(new HashDigestDocConsumer(tripleHashDocQueue,
-						barrierPhaser, idValCollection, docCount));
+						snychLatch, idValCollection, docCount));
 				threadExecutor.submit(tasks.get(i));
 			}
 
@@ -118,7 +118,7 @@ public class HashDigestLoader {
 				tripleHashDocQueue.put(nullDoc);
 			}
 			System.out.println("Added nulls to indicate end of insertion");
-			barrierPhaser.arriveAndAwaitAdvance();
+			snychLatch.await();;
 			threadExecutor.shutdown();
 			System.out.println("\nDone");
 			System.out.println("Triples: " + tripleCount + "  Docs: "
@@ -185,16 +185,16 @@ public class HashDigestLoader {
 class HashDigestDocConsumer implements Runnable {
 
 	private LinkedBlockingQueue<DBObject> docQueue;
-	private Phaser barrierPhaser;
+	private CountDownLatch snychLatch;
 	private DBCollection idValCollection;
 	private BulkWriteOperation bulkInsert;
 	private AtomicInteger docCount;
 
 	HashDigestDocConsumer(LinkedBlockingQueue<DBObject> docQueue,
-			Phaser barrierPhaser, DBCollection idValCollection,
+			CountDownLatch snychLatch, DBCollection idValCollection,
 			AtomicInteger docCount) {
 		this.docQueue = docQueue;
-		this.barrierPhaser = barrierPhaser;
+		this.snychLatch = snychLatch;
 		this.idValCollection = idValCollection;
 		bulkInsert = idValCollection.initializeUnorderedBulkOperation();
 		this.docCount = docCount;
@@ -202,31 +202,20 @@ class HashDigestDocConsumer implements Runnable {
 
 	@Override
 	public void run() {
-		int phaseNumber = barrierPhaser.register();
-		System.out.println(Thread.currentThread().getName() + 
-				"  beginning of run(), phase number: " + phaseNumber);
 		int count = 0;
 		DBObject doc = null;
 		while (true) {
 			try {
 				doc = docQueue.take();
-				if (doc.get(Constants.FIELD_HASH_VALUE) == null)
-					System.out.println(Thread.currentThread().getName() + "  " + 
-				        "null reached1"); 
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-			if (doc.get(Constants.FIELD_HASH_VALUE) == null) {
-				System.out.println(Thread.currentThread().getName() + "  " + 
-				        "null reached2"); 
+			if (doc.get(Constants.FIELD_HASH_VALUE) == null)
 				break;
-			}
 			bulkInsert.insert(doc);
 			docCount.incrementAndGet();
 
 			count++;
-			System.out.println(Thread.currentThread().getName() + "  " + 
-					count + "  " + docCount.get());
 			if (count == 1000) {
 				bulkInsert.execute();
 				bulkInsert = idValCollection.initializeUnorderedBulkOperation();
@@ -238,9 +227,6 @@ class HashDigestDocConsumer implements Runnable {
 			bulkInsert = idValCollection.initializeUnorderedBulkOperation();
 			count = 0;
 		}
-		System.out.println(Thread.currentThread().getName() + "  out of the loop");
-		phaseNumber = barrierPhaser.arriveAndDeregister();
-		System.out.println(Thread.currentThread().getName() + 
-				"  end of run(), phase number: " + phaseNumber);
+		snychLatch.countDown();
 	}
 }
