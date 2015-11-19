@@ -203,8 +203,11 @@ class HashDigestDocConsumer implements Runnable {
 	public void run() {
 		int count = 0;
 		DBObject doc = null;
+		System.out.println(Thread.currentThread().getName() + " started");
 		while (true) {
 			try {
+				System.out.println(Thread.currentThread().getName() + 
+						" about to take() an item");
 				doc = docQueue.take();
 			} catch (InterruptedException e) {
 				e.printStackTrace();
@@ -224,12 +227,13 @@ class HashDigestDocConsumer implements Runnable {
 				count = 0;
 			}
 		}
-		System.out.println(Thread.currentThread().getName() + " out of loop in run()");
 		if (count > 1) {
 			bulkInsert.execute();
 			bulkInsert = idValCollection.initializeUnorderedBulkOperation();
 			count = 0;
 		}
+		System.out.println(Thread.currentThread().getName() + 
+				" out of loop in run()");
 		synchLatch.countDown();
 		System.out.println(Thread.currentThread().getName() + 
 				"  countDown: " + synchLatch.getCount());
