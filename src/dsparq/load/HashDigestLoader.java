@@ -208,6 +208,9 @@ class HashDigestDocConsumer implements Runnable {
 		while (true) {
 			try {
 				doc = docQueue.take();
+				if (doc.get(Constants.FIELD_HASH_VALUE) == null)
+					System.out.println(Thread.currentThread().getName() + "  " + 
+				        "null reached"); 
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
