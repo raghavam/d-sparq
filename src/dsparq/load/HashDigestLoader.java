@@ -202,6 +202,7 @@ class HashDigestDocConsumer implements Runnable {
 
 	@Override
 	public void run() {
+		System.out.println(Thread.currentThread().getName() + "  beginning of run()");
 		barrierPhaser.register();
 		int count = 0;
 		DBObject doc = null;
