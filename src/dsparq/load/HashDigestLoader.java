@@ -230,7 +230,11 @@ class HashDigestDocConsumer implements Runnable {
 		System.out.println(Thread.currentThread().getName() + " count: " + count);
 		if (count > 1) {
 			System.out.println(Thread.currentThread().getName() + " before execute()");
-			bulkInsert.execute();
+			try {
+				bulkInsert.execute();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 			System.out.println(Thread.currentThread().getName() + " after execute()");
 			bulkInsert = idValCollection.initializeUnorderedBulkOperation();
 			count = 0;
