@@ -15,6 +15,7 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -760,7 +761,13 @@ public class MongoConnector {
 //		deleteRedisHashField();
 //		testRedisReadSpeed();
 //		testMongoNullException();
-		testSystemProperties();
+//		testSystemProperties();
+		
+		String vertexRegex = "[vV]ertex.*?";
+		String testStr = "vertex";
+		Pattern pattern = Pattern.compile(vertexRegex);
+		boolean isAMatch = pattern.matcher(testStr).matches();
+		System.out.println(isAMatch);
 	}
 }
 

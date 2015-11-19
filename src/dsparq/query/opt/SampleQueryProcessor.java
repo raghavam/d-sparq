@@ -4,9 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Phaser;
 import java.util.concurrent.atomic.AtomicLong;
-
-import jsr166y.Phaser;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;

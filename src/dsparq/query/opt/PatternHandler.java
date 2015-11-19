@@ -8,8 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import jsr166y.Phaser;
+import java.util.concurrent.Phaser;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
