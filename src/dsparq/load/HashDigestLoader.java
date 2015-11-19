@@ -210,12 +210,15 @@ class HashDigestDocConsumer implements Runnable {
 				doc = docQueue.take();
 				if (doc.get(Constants.FIELD_HASH_VALUE) == null)
 					System.out.println(Thread.currentThread().getName() + "  " + 
-				        "null reached"); 
+				        "null reached1"); 
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-			if (doc.get(Constants.FIELD_HASH_VALUE) == null)
+			if (doc.get(Constants.FIELD_HASH_VALUE) == null) {
+				System.out.println(Thread.currentThread().getName() + "  " + 
+				        "null reached2"); 
 				break;
+			}
 			bulkInsert.insert(doc);
 			docCount.incrementAndGet();
 
