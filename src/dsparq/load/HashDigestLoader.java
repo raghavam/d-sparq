@@ -202,8 +202,9 @@ class HashDigestDocConsumer implements Runnable {
 
 	@Override
 	public void run() {
-		System.out.println(Thread.currentThread().getName() + "  beginning of run()");
-		barrierPhaser.register();
+		int phaseNumber = barrierPhaser.register();
+		System.out.println(Thread.currentThread().getName() + 
+				"  beginning of run(), phase number: " + phaseNumber);
 		int count = 0;
 		DBObject doc = null;
 		while (true) {
@@ -238,6 +239,8 @@ class HashDigestDocConsumer implements Runnable {
 			bulkInsert = idValCollection.initializeUnorderedBulkOperation();
 			count = 0;
 		}
-		barrierPhaser.arriveAndDeregister();
+		phaseNumber = barrierPhaser.arriveAndDeregister();
+		System.out.println(Thread.currentThread().getName() + 
+				"  end of run(), phase number: " + phaseNumber);
 	}
 }
