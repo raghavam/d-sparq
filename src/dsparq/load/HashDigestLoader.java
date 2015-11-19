@@ -116,7 +116,6 @@ public class HashDigestLoader {
 			for (int i = 0; i < numThreads; i++) {
 				tripleHashDocQueue.put(nullDoc);
 			}
-			System.out.println("Added nulls to indicate end of insertion");
 			synchLatch.await();
 			threadExecutor.shutdown();
 			System.out.println("\nDone");
@@ -203,46 +202,37 @@ class HashDigestDocConsumer implements Runnable {
 	public void run() {
 		int count = 0;
 		DBObject doc = null;
-		System.out.println(Thread.currentThread().getName() + " started");
 		while (true) {
 			try {
-				System.out.println(Thread.currentThread().getName() + 
-						" about to take() an item");
 				doc = docQueue.take();
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-			if (doc.get(Constants.FIELD_HASH_VALUE) == null) {
-				System.out.println(Thread.currentThread().getName() + 
-						" null value received");
+			if (doc.get(Constants.FIELD_HASH_VALUE) == null)
 				break;
-			}
 			bulkInsert.insert(doc);
 			docCount.incrementAndGet();
 
 			count++;
 			if (count == 1000) {
-				bulkInsert.execute();
+				try {
+					bulkInsert.execute();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 				bulkInsert = idValCollection.initializeUnorderedBulkOperation();
 				count = 0;
 			}
 		}
-		System.out.println(Thread.currentThread().getName() + " count: " + count);
 		if (count > 1) {
-			System.out.println(Thread.currentThread().getName() + " before execute()");
 			try {
 				bulkInsert.execute();
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			System.out.println(Thread.currentThread().getName() + " after execute()");
 			bulkInsert = idValCollection.initializeUnorderedBulkOperation();
 			count = 0;
 		}
-		System.out.println(Thread.currentThread().getName() + 
-				" out of loop in run()");
 		synchLatch.countDown();
-		System.out.println(Thread.currentThread().getName() + 
-				"  countDown: " + synchLatch.getCount());
 	}
 }
