@@ -209,8 +209,11 @@ class HashDigestDocConsumer implements Runnable {
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-			if (doc.get(Constants.FIELD_HASH_VALUE) == null)
+			if (doc.get(Constants.FIELD_HASH_VALUE) == null) {
+				System.out.println(Thread.currentThread().getName() + 
+						" null value received");
 				break;
+			}
 			bulkInsert.insert(doc);
 			docCount.incrementAndGet();
 
@@ -221,6 +224,7 @@ class HashDigestDocConsumer implements Runnable {
 				count = 0;
 			}
 		}
+		System.out.println(Thread.currentThread().getName() + " out of loop in run()");
 		if (count > 1) {
 			bulkInsert.execute();
 			bulkInsert = idValCollection.initializeUnorderedBulkOperation();
