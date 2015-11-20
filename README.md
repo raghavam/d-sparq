@@ -37,7 +37,7 @@ The steps to set up sharded cluster are given here for convenience. For the foll
   1. Start the config server database instances. One instance of this is minimally sufficient. Use ```numactl --interleave=all bin/mongod --config mongod-configsvr.conf```. 
   2. Start the mongos instances. One instance of this is minimally sufficient. Use ```numactl --interleave=all bin/mongos --config mongos.conf```.
   3. Start the shards in the cluster. Do this on all the nodes in the cluster. Use ```numactl --interleave=all bin/mongod --config mongod-shardsvr.conf```.
-  4. Add shards to the cluster. Using mongo shell and connect to mongos instance (bin/mongos --port 27019). At the prompt run the
+  4. Add shards to the cluster. Using mongo shell and connect to mongos instance (bin/mongo --port 27019). At the prompt run the
   following commands: a) ```use admin``` b) ```db.runCommand( { addshard : "<shard_host>:<shard_port>" } );``` Run
   this for all shards i.e., put in the information for all the shards. c) Enable sharding for the 
   database (rdfdb) as well as the collection (idvals) to be sharded. Use the commands, 
