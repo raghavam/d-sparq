@@ -59,33 +59,38 @@ import dsparq.util.Util;
 
 public class MongoConnector {
 
+	public static void main(String[] args) throws Exception {
+		connectToMongo();
+//		testDocInserts();
+//		testIndexes();
+//		readRDFTriples(args[0]);
+//		testRandomAccess(args[0]);
+//		testFindAndModify();
+//		testUniqueIndex();
+//		testFileMerge();
+//		testSharding();
+//		testUUID();
+//		testRDFReader();				
+//		testServerScripting();
+//		testArrayInsertion();
+//		testRedisScript();
+//		findGraphCluster();
+//		testShardedPipeline();
+//		findID();
+//		testMongoDupID();
+//		deleteRedisHashField();
+//		testRedisReadSpeed();
+//		testMongoNullException();
+//		testSystemProperties();
+		
+	}
+	
 	public static void connectToMongo() throws Exception{
-		Mongo mongo = new Mongo("localhost", 27017);
-		DB db = mongo.getDB("testDB");
-		DBCollection collection = db.getCollection("testCollection");
-		BasicDBObject document = new BasicDBObject();
-		
-		collection.drop();
-		
-		document.put("name", "MongoDB");
-		document.put("type", "database");
-		document.put("count", 1);
-
-        BasicDBObject info = new BasicDBObject();
-
-        info.put("x", 203);
-        info.put("y", 102);
-
-        document.put("info", info);
-        collection.insert(document);
-        
-        collection.save(document);
-        
-        System.out.println("Document inserted");
-        System.out.println("\nPrinting out the results\n");
-        
-        DBObject myDoc = collection.findOne();
-        System.out.println(myDoc);
+		Mongo mongo = new MongoClient("100.117.94.55", 27019);
+		DB db = mongo.getDB("rdfdb");
+		DBCollection collection = db.getCollection("idvals");
+		long numDocs = collection.count();
+        System.out.println("Number of docs: " + numDocs);
         mongo.close();
 	}
 	
@@ -737,37 +742,6 @@ public class MongoConnector {
 		for(Entry<Object,Object> entry : entries)
 			System.out.println(entry.getKey().toString() + "   " + 
 					entry.getValue().toString());
-	}
-	
-	public static void main(String[] args) throws Exception {
-//		connectToMongo();
-//		testDocInserts();
-//		testIndexes();
-//		readRDFTriples(args[0]);
-//		testRandomAccess(args[0]);
-//		testFindAndModify();
-//		testUniqueIndex();
-//		testFileMerge();
-//		testSharding();
-//		testUUID();
-//		testRDFReader();				
-//		testServerScripting();
-//		testArrayInsertion();
-//		testRedisScript();
-//		findGraphCluster();
-//		testShardedPipeline();
-//		findID();
-//		testMongoDupID();
-//		deleteRedisHashField();
-//		testRedisReadSpeed();
-//		testMongoNullException();
-//		testSystemProperties();
-		
-		String vertexRegex = "[vV]ertex.*?";
-		String testStr = "vertex";
-		Pattern pattern = Pattern.compile(vertexRegex);
-		boolean isAMatch = pattern.matcher(testStr).matches();
-		System.out.println(isAMatch);
 	}
 }
 
