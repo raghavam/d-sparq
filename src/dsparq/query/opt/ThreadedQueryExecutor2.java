@@ -301,9 +301,9 @@ public class ThreadedQueryExecutor2 extends PatternHandler {
 		
 		// testing...
 		System.out.println("Str value: " + value);
-		if (value.equals("<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>"))
+		if (value.equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
 			return "2570666066328449923";
-		else if (value.equals("<http://localhost/vocabulary/bench/Article>"))
+		else if (value.equals("http://localhost/vocabulary/bench/Article"))
 			return "3245323887710599613";
 			
 		String id = idCache.get(value);
