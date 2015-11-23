@@ -298,6 +298,13 @@ public class ThreadedQueryExecutor2 extends PatternHandler {
 	
 	private String getIDFromStrVal(String value) throws Exception {
 		// get hash digest of this value and then query DB
+		
+		// testing...
+		if (value.equals("<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>"))
+			return "2570666066328449923";
+		else if (value.equals("<http://localhost/vocabulary/bench/Article>"))
+			return "3245323887710599613";
+			
 		String id = idCache.get(value);
 		if(id != null)
 			return id;
