@@ -15,10 +15,6 @@ import dsparq.util.Util;
  */
 public class DummyTripleGenerator {
 	
-	public DummyTripleGenerator() {
-
-	}
-	
 	public void generateDummyTriples(long numTriples) {
 		long startTime = System.nanoTime();
 		long numRandomTriples = (long) (numTriples * 0.8);
