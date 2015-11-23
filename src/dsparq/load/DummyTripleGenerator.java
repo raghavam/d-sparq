@@ -46,9 +46,9 @@ public class DummyTripleGenerator {
 			PrintWriter writer) {
 		Random random = new Random();
 		for (int i = 1; i <= numRandomTriples; i++) {
-			long subject = random.nextLong();
-			long predicate = random.nextLong();
-			long object = random.nextLong();
+			long subject = Math.abs(random.nextLong());
+			long predicate = Math.abs(random.nextLong());
+			long object = Math.abs(random.nextLong());
 			StringBuilder tripleKV = new StringBuilder();
 			tripleKV.append(subject).
 				append(Constants.TRIPLE_TERM_DELIMITER).
@@ -65,10 +65,10 @@ public class DummyTripleGenerator {
 		long numGroups = (long) (numStarTriples * 0.1);
 		Random random = new Random();
 		for (int i = 1; i <= numGroups; i++) {
-			long subject = random.nextLong();
+			long subject = Math.abs(random.nextLong());
 			for (int j = 1; j <= 10; j++) {
-				long predicate = random.nextLong();
-				long object = random.nextLong();
+				long predicate = Math.abs(random.nextLong());
+				long object = Math.abs(random.nextLong());
 				StringBuilder tripleKV = new StringBuilder();
 				tripleKV.append(subject).
 					append(Constants.TRIPLE_TERM_DELIMITER).
