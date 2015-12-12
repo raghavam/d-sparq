@@ -19,17 +19,18 @@ public class DummyTripleGenerator {
 		long startTime = System.nanoTime();
 		long numRandomTriples = (long) (numTriples * 0.8);
 		long numStarTriples = numTriples - numRandomTriples;
+		int numPredicates = (int) (numTriples * 0.05);
 		
 		PrintWriter writer1 = null;
 		PrintWriter writer2 = null;
 		try {
 			writer1 = new PrintWriter(new BufferedWriter(
 				new FileWriter("random-triples")));
-			generateRandomTriples(numRandomTriples, writer1);
+			generateRandomTriples(numRandomTriples, numPredicates, writer1);
 			
 			writer2 = new PrintWriter(new BufferedWriter(
 					new FileWriter("star-triples")));
-			generateStarSchemaTriples(numStarTriples, writer2);
+			generateStarSchemaTriples(numStarTriples, numPredicates, writer2);
 		} catch (Exception e) {
 			
 		} finally {
@@ -43,11 +44,11 @@ public class DummyTripleGenerator {
 	}
 	
 	private void generateRandomTriples(long numRandomTriples, 
-			PrintWriter writer) {
+			int numPredicates, PrintWriter writer) {
 		Random random = new Random();
 		for (int i = 1; i <= numRandomTriples; i++) {
 			long subject = Math.abs(random.nextLong());
-			long predicate = Math.abs(random.nextLong());
+			long predicate = Math.abs(random.nextInt(numPredicates)) + 1;
 			long object = Math.abs(random.nextLong());
 			StringBuilder tripleKV = new StringBuilder();
 			tripleKV.append(subject).
@@ -61,13 +62,13 @@ public class DummyTripleGenerator {
 	}
 	
 	private void generateStarSchemaTriples(long numStarTriples, 
-			PrintWriter writer) {
+			int numPredicates, PrintWriter writer) {
 		long numGroups = (long) (numStarTriples * 0.1);
 		Random random = new Random();
 		for (int i = 1; i <= numGroups; i++) {
 			long subject = Math.abs(random.nextLong());
 			for (int j = 1; j <= 10; j++) {
-				long predicate = Math.abs(random.nextLong());
+				long predicate = Math.abs(random.nextInt(numPredicates)) + 1;
 				long object = Math.abs(random.nextLong());
 				StringBuilder tripleKV = new StringBuilder();
 				tripleKV.append(subject).
