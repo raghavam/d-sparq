@@ -21,23 +21,18 @@ public class DummyTripleGenerator {
 		long numStarTriples = numTriples - numRandomTriples;
 		int numPredicates = (int) (numTriples * 0.05);
 		
-		PrintWriter writer1 = null;
-		PrintWriter writer2 = null;
+		PrintWriter writer = null;
 		try {
-			writer1 = new PrintWriter(new BufferedWriter(
-				new FileWriter("random-triples")));
-			generateRandomTriples(numRandomTriples, numPredicates, writer1);
+			writer = new PrintWriter(new BufferedWriter(
+				new FileWriter("dummy-triples")));
+			generateRandomTriples(numRandomTriples, numPredicates, writer);
 			
-			writer2 = new PrintWriter(new BufferedWriter(
-					new FileWriter("star-triples")));
-			generateStarSchemaTriples(numStarTriples, numPredicates, writer2);
+			generateStarSchemaTriples(numStarTriples, numPredicates, writer);
 		} catch (Exception e) {
 			
 		} finally {
-			if (writer1 != null)
-				writer1.close();
-			if (writer2 != null)
-				writer2.close();
+			if (writer != null)
+				writer.close();
 		}		
 		double secs = Util.getElapsedTime(startTime);
 		System.out.println("Time taken (seconds): " + secs);
